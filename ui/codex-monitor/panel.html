@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' https: data:; connect-src ipc: http://ipc.localhost; base-uri 'none'; form-action 'none'; frame-src 'none'">
+  <title>额度速览</title>
+  <link rel="stylesheet" href="panel.css">
+</head>
+<body>
+  <header><div><span class="eyebrow" id="provider-label">METERNEST · CODEX</span><h1>额度速览<span class="live-dot"></span></h1></div><button id="refresh" title="刷新数据">刷新</button></header>
+  <nav class="provider-tabs" role="tablist" aria-label="额度来源">
+    <button id="tab-codex" role="tab" aria-selected="true" aria-controls="codex-content" data-provider="codex">Codex</button>
+    <button id="tab-workbuddy" role="tab" aria-selected="false" aria-controls="workbuddy-content" tabindex="-1" data-provider="workbuddy">WorkBuddy</button>
+  </nav>
+  <main>
+    <div id="codex-content" role="tabpanel" aria-labelledby="tab-codex">
+    <section class="account-card" aria-labelledby="account-title">
+      <div class="account-heading"><h2 id="account-title">本机账号</h2><span id="identity" class="muted">通过本机 Codex 只读接口获取</span><span id="plan" class="badge"></span></div>
+      <div id="usage" aria-live="polite"><p class="empty">正在读取额度…</p></div>
+      <div class="account-foot"><p id="usage-time" class="footnote"></p><span id="reset-credits" class="footnote"></span></div>
+    </section>
+    <section id="reset-history" class="history" aria-labelledby="history-title">
+      <div class="section-heading"><h2 id="history-title">最近额度动态</h2></div>
+      <div id="records" aria-live="polite"><p class="empty">正在读取记录…</p></div>
+      <p id="feed-status" class="footnote"></p>
+    </section>
+    </div>
+    <div id="workbuddy-content" role="tabpanel" aria-labelledby="tab-workbuddy" hidden>
+      <section class="account-card" aria-labelledby="workbuddy-title">
+        <div class="account-heading"><h2 id="workbuddy-title">本机账号</h2><span id="workbuddy-identity" class="muted">通过本机 WorkBuddy 读取</span><span id="workbuddy-plan" class="badge">WorkBuddy</span></div>
+        <div id="workbuddy-usage" aria-live="polite"></div>
+        <p id="workbuddy-time" class="footnote"></p>
+      </section>
+      <section id="workbuddy-history" class="history credit-history" aria-labelledby="credit-details-title">
+        <div class="section-heading"><h2 id="credit-details-title">积分与模型</h2></div>
+        <nav id="credit-period" class="period-tabs" aria-label="积分与模型内容"><button data-credit-period="valid" aria-pressed="true">有效期内</button><button data-credit-period="expired" aria-pressed="false">已过期</button><button data-credit-period="models" aria-pressed="false">模型</button></nav>
+        <div id="workbuddy-details" aria-live="polite"></div>
+        <div id="workbuddy-models" hidden><div id="model-list" aria-label="WorkBuddy 模型倍率" aria-live="polite" tabindex="0"></div><p id="model-status" class="footnote" role="status"></p></div>
+        <div id="credit-pagination" class="credit-pagination" hidden>
+          <button type="button" id="credit-prev" data-credit-page="-1">上一页</button>
+          <span id="credit-page"></span>
+          <button type="button" id="credit-next" data-credit-page="1">下一页</button>
+        </div>
+      </section>
+
+    </div>
+  </main>
+  <footer>
+    <div id="codex-source"><button class="link" data-url="https://codex-reset.pro/">打开 Codex Reset FM ↗</button></div>
+    <p id="refresh-summary"></p>
+    <p>额度查询为只读；预热与签到可在设置中管理。</p>
+  </footer>
+  <script src="bridge-panel.js"></script>
+  <script src="workbuddy-models.js"></script>
+  <script src="panel.js"></script>
+</body>
+</html>

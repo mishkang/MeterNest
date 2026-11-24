@@ -1,0 +1,208 @@
+:root { color-scheme: light dark; --bg: #f5f7fa; --card: #fff; --text: #242b38; --muted: #788394; --border: #e6eaf0; --blue: #3478ed; --track: #eaf0fb; }
+@media (prefers-color-scheme: dark) { :root { --bg: #191c22; --card: #252932; --text: #e6eaf2; --muted: #9aa6b8; --border: #353d4b; --blue: #75a8ff; --track: #353f55; } }
+* { box-sizing: border-box; }
+/* The transparent gutters match the native window bounds in windows.rs. */
+html { height: 100%; padding: 0 24px 32px; background: transparent; }
+body {
+  height: 100%;
+  margin: 0;
+  position: relative;
+  isolation: isolate;
+  container: panel / size;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 14px;
+  box-shadow: 0 1px 4px rgb(25 33 53 / 11%), 0 8px 24px rgb(25 33 53 / 16%);
+  color: var(--text);
+  background: transparent;
+  font: 12px/1.5 -apple-system, BlinkMacSystemFont, sans-serif;
+}
+body::before { content: ''; position: absolute; inset: 0; z-index: -1; border-radius: inherit; background: var(--bg); box-shadow: inset 0 0 0 1px var(--border); }
+header { flex-shrink: 0; display: flex; align-items: center; justify-content: space-between; padding: 16px 18px 10px; }
+.eyebrow { color: var(--muted); font-size: 10px; letter-spacing: 1.8px; font-weight: 600; }
+h1 { margin: 3px 0 0; font-size: 23px; font-weight: 650; letter-spacing: -.5px; }
+.live-dot { display: inline-block; width: 6px; height: 6px; margin: 0 0 4px 9px; background: #40b690; border-radius: 50%; }
+h2 { margin: 0; font-size: 13px; font-weight: 600; }
+button { border: 1px solid var(--border); border-radius: 8px; background: var(--card); color: var(--text); padding: 6px 12px; font: inherit; cursor: pointer; }
+button:hover { border-color: var(--blue); }
+button:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+button:disabled { opacity: .55; cursor: wait; }
+[hidden] { display: none !important; }
+.provider-tabs { display: flex; flex-shrink: 0; gap: 4px; margin: 0 14px 10px; padding: 3px; border: 1px solid var(--border); border-radius: 10px; background: var(--track); }
+.provider-tabs button { flex: 1; background: none; border-color: transparent; padding: 5px 12px; color: var(--muted); }
+.provider-tabs button[aria-selected="true"] { color: var(--blue); background: var(--card); box-shadow: 0 1px 3px #0000000a; font-weight: 600; }
+.provider-tabs button:hover { color: var(--blue); }
+.provider-note { color: var(--muted); margin: 12px 3px; font-size: 11px; }
+#workbuddy-identity { overflow-wrap: anywhere; margin: 3px 0 7px; }
+.credit-balance { display: flex; align-items: baseline; gap: 8px; margin: 8px 0; }
+.credit-balance strong { display: block; font-size: 32px; color: var(--blue); font-variant-numeric: tabular-nums; letter-spacing: -.7px; }
+.credit-categories { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; padding: 6px 0 3px; }
+.credit-category span { display: block; font-size: 12px; }
+.credit-category strong { display: block; font-size: 18px; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+.credit-detail { padding: 5px 0; border-bottom: 1px solid var(--border); }
+.credit-history { padding-top: 10px; }
+.credit-detail:last-child { border-bottom: 0; }
+.credit-detail-title { display: flex; align-items: center; gap: 8px; min-height: 20px; }
+.credit-detail h3 { margin: 0; font-size: 12px; line-height: 1.5; }
+.credit-detail-meta { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 3px 7px; color: var(--muted); font-size: 10px; margin: 2px 0; }
+.credit-detail .credit-track { height: 5px; margin: 3px 0 2px; }
+.credit-track .fill { background: #28b697; }
+.credit-remaining { margin-left: auto; font-size: 10px; color: var(--muted); white-space: nowrap; }
+.badge.critical { color: #d75163; background: #d7516319; }
+main { min-height: 0; flex: 1; overflow-y: auto; overflow-anchor: none; padding: 0 14px; }
+.account-card { padding: 11px 14px; border: 1px solid var(--border); border-radius: 13px; background: var(--card); }
+.section-heading { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.muted, .footnote { color: var(--muted); }
+#identity { margin: 3px 0 7px; overflow-wrap: anywhere; }
+.footnote { margin: 6px 0 0; font-size: 10px; }
+.badge { font-size: 10px; padding: 2px 7px; border-radius: 5px; background: var(--track); color: var(--blue); white-space: nowrap; }
+.bucket-name { margin: 11px 0 5px; font-weight: 600; }
+.quota { margin: 7px 0; }
+.quota-heading { display: flex; justify-content: space-between; align-items: baseline; }
+.quota strong { font-size: 16px; color: var(--blue); font-variant-numeric: tabular-nums; }
+.quota.low strong, .error { color: #d75d57; }
+.track { height: 4px; border-radius: 4px; background: var(--track); overflow: hidden; margin: 2px 0; }
+.fill { height: 100%; border-radius: inherit; background: var(--blue); }
+.low .fill { background: #d75d57; }
+.quota-time { color: var(--muted); font-size: 10px; }
+.reset-credits { border-top: 1px solid var(--border); padding-top: 7px; margin: 8px 0 0; }
+.history { padding-top: 14px; }
+.record { padding: 12px 0; border-bottom: 1px solid var(--border); }
+.record:last-child { border: 0; }
+.record time { color: var(--muted); font-size: 10px; font-variant-numeric: tabular-nums; }
+.record-title { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin: 4px 0; }
+.record h3 { margin: 0; font-size: 12px; font-weight: 600; }
+.record p { margin: 3px 0 6px; color: var(--muted); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.badge.done { color: #258c6d; background: rgba(44, 164, 126, .11); }
+.badge.pending { color: #bd811a; background: rgba(210, 156, 47, .12); }
+.record-bottom { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 10px; color: var(--muted); }
+.link { padding: 0; border: 0; background: none; border-radius: 3px; color: var(--blue); font-size: 11px; }
+.link:hover { text-decoration: underline; }
+.empty { padding: 12px 0; margin: 0; color: var(--muted); }
+footer { flex-shrink: 0; display: grid; gap: 3px; padding: 10px 18px; border-top: 1px solid var(--border); margin-top: 8px; color: var(--muted); }
+footer > div { display: flex; }
+footer p { margin: 0; font-size: 10px; }
+
+.record .message-text { display: block; overflow: visible; -webkit-line-clamp: unset; color: var(--text); white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.5; margin: 3px 0 2px; }
+.message-meta { display: block; color: var(--muted); font-size: 11px; margin-bottom: 3px; }
+.record-messages summary { color: var(--blue); cursor: pointer; padding: 8px 0 3px; }
+.record-messages summary:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+.record-messages .when-open { display: none; }
+.record-messages[open] .when-open { display: inline; }
+.record-messages[open] .when-closed { display: none; }
+.record:has(.record-messages[open]) > .record-latest { display: none; }
+.message-list { list-style: none; margin: 8px 0; padding: 4px 0 0 13px; border-left: 1px solid var(--border); }
+.message-list li { position: relative; padding: 0 0 11px 3px; }
+.message-list li:last-child { padding-bottom: 0; }
+.message-list li::before { content: ''; position: absolute; left: -17px; top: 5px; width: 6px; height: 6px; border: 2px solid var(--bg); border-radius: 50%; background: var(--muted); }
+.record-bottom { margin-top: 8px; }
+
+.message-list .message-meta { display: flex; justify-content: space-between; gap: 8px; }
+
+/* Compact quota layout, preserving readable account names and native time tooltips. */
+.account-card { padding: 9px 13px; }
+.account-heading { display: flex; align-items: baseline; gap: 7px; }
+.account-heading h2 { flex-shrink: 0; font-size: 12px; }
+.account-heading #identity, .account-heading #workbuddy-identity { flex: 1; min-width: 0; margin: 0; overflow-wrap: anywhere; font-size: 11px; }
+.account-heading .badge { align-self: flex-start; }
+.quota { margin: 7px 0 5px; }
+.quota-time { line-height: 1.4; }
+.account-foot { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 2px 8px; border-top: 1px solid var(--border); margin-top: 6px; }
+.account-foot .footnote { text-align: left; }
+.credit-balance { margin: 5px 0 3px; }
+.credit-balance strong { font-size: 28px; }
+/* Let the three credit categories occupy the card's spare height instead of
+   leaving a blank gap above the update time. */
+#workbuddy-usage { flex: 1; display: flex; flex-direction: column; }
+.credit-categories { flex: 1; align-content: center; padding: 2px 0; }
+.credit-category strong { font-size: 18px; }
+#workbuddy-time { text-align: left; border-top: 1px solid var(--border); padding-top: 5px; }
+.history { padding-top: 8px; }
+.record { padding: 9px 0; }
+.period-tabs { display: flex; gap: 3px; margin: 4px 0; font-size: 11px; }
+.period-tabs button { padding: 4px 10px; border: 0; background: transparent; color: var(--muted); }
+.period-tabs button[aria-pressed="true"] { background: var(--card); color: var(--blue); }
+.credit-pagination { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding-top: 0; }
+.credit-pagination span { color: var(--muted); font-size: 10px; font-variant-numeric: tabular-nums; }
+.credit-pagination button { padding: 4px 10px; font-size: 11px; }
+.credit-pagination button:disabled { opacity: .45; cursor: default; }
+.credit-pagination button:disabled:hover { border-color: var(--border); }
+/* Keep five credit rows and the pager visible on shorter screens without
+   changing the popup's fixed height. */
+@container panel (max-height: 740px) {
+  .history { padding-top: 6px; }
+  .period-tabs { margin: 2px 0; }
+  .period-tabs button { padding: 3px 10px; }
+  .credit-pagination button { padding: 3px 10px; }
+  .credit-detail { padding: 2px 0; }
+  .credit-detail-title { min-height: 0; }
+  .credit-detail h3 { line-height: 1.35; }
+  .credit-detail-meta { margin: 2px 0; }
+  .credit-detail .credit-track { height: 4px; margin: 2px 0; }
+}
+.credit-detail:last-child, .record:last-child { border-bottom: 0; }
+
+/* Equal-height provider cards: keep the update-time footer anchored to the
+   bottom so both panels align when switching tabs. */
+.account-card { display: flex; flex-direction: column; }
+.account-foot, #workbuddy-time { margin-top: auto; }
+
+/* Keep credit paging inside the viewport even when the account card or text
+   grows. Only the list scrolls; paging controls stay above the footer. */
+main.workbuddy-view { overflow-y: hidden; }
+main.workbuddy-view + footer { margin-top: 4px; padding-top: 8px; }
+#workbuddy-content { height: 100%; min-height: 0; display: flex; flex-direction: column; }
+#workbuddy-content > .account-card { flex-shrink: 0; }
+#workbuddy-content > .credit-history { flex: 1; min-height: 0; display: flex; flex-direction: column; padding-bottom: 2px; }
+.credit-history > .section-heading, .credit-history > .period-tabs, .credit-history > .credit-pagination { flex-shrink: 0; }
+#workbuddy-details { flex: 1; min-height: 0; overflow-y: auto; overflow-anchor: none; }
+.credit-pagination { background: var(--bg); }
+/* Distribute available space across the five rows. Keep text readable while
+   letting row padding absorb differences in the real account card's height. */
+#workbuddy-details { display: grid; grid-template-rows: repeat(5, clamp(49px, 20%, 60px)); align-content: start; }
+#workbuddy-details > .credit-detail { min-height: 0; padding: 0; display: flex; flex-direction: column; justify-content: center; }
+.credit-detail-title, .credit-detail-meta, .credit-detail .credit-track { flex-shrink: 0; }
+@container panel (max-height: 740px) {
+  #workbuddy-details { grid-template-rows: repeat(5, clamp(42px, 20%, 50px)); }
+  .credit-detail-meta { line-height: 1.35; margin: 1px 0; }
+  .credit-detail .credit-track { height: 3px; margin: 2px 0; }
+}
+
+/* A hidden source bar frees additional height. Share it across all five row
+   slots instead of leaving a gap above the pager; partial pages keep the slots. */
+main.workbuddy-view.single-provider #workbuddy-details { grid-template-rows: repeat(5, minmax(49px, 1fr)); }
+@container panel (max-height: 740px) {
+  main.workbuddy-view.single-provider #workbuddy-details { grid-template-rows: repeat(5, minmax(42px, 1fr)); }
+}
+
+/* Model content shares the credit viewport; only its list scrolls. */
+#workbuddy-models { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
+#model-status { flex-shrink: 0; margin: 6px 0 0; padding-top: 5px; border-top: 1px solid var(--border); font-size: 10px; }
+#model-list { flex: 1; min-height: 0; overflow-y: auto; overflow-anchor: none; padding-right: 12px; }
+#model-list:focus-visible { outline: 1px solid var(--blue); outline-offset: -1px; border-radius: 4px; }
+.model-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 10px; margin: 0 2px; padding: 10px 8px; border-bottom: 1px solid var(--border); border-radius: 8px; }
+.model-row:last-child { border-bottom: 0; }
+.model-info { min-width: 0; display: flex; align-items: center; gap: 7px; }
+.model-name { min-width: 0; margin: 0; font-size: 12px; line-height: 1.5; font-weight: 500; overflow-wrap: anywhere; }
+.model-name { cursor: pointer; }
+.model-row { cursor: pointer; }
+.model-row:hover { background: var(--track); }
+.model-row:focus-visible { outline: 1px solid var(--blue); outline-offset: -1px; }
+.model-icon { flex: 0 0 16px; width: 16px; height: 16px; position: relative; }
+.model-icon-image { display: block; object-fit: contain; background: none; border-radius: 3px; }
+.model-tip { position: absolute; z-index: 100; max-width: min(310px, calc(100% - 20px)); max-height: calc(100% - 20px); overflow: hidden; padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--card); color: var(--text); box-shadow: 0 3px 12px #0002; font-size: 11px; line-height: 1.4; white-space: pre-wrap; overflow-wrap: anywhere; pointer-events: none; }
+.model-badges { display: flex; flex-shrink: 0; gap: 4px; }
+.model-badges:empty { display: none; }
+.model-rate { display: flex; flex-direction: column; align-items: flex-end; gap: 1px; white-space: nowrap; color: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums; }
+.model-rate s { font-size: 10px; opacity: .7; }
+.model-badge { font-size: 10px; padding: 1px 6px; }
+.model-badge.promotion { color: #159b82; background: #159b8214; }
+.model-badge.tier { color: #bd811a; background: #d29c2f12; }
+
+.model-icon-fallback { border: 1.3px solid var(--muted); border-radius: 50%; }
+.model-icon-fallback::after { content: ''; position: absolute; inset: 3px; border: 1px solid var(--muted); border-radius: 50%; }
+@media (prefers-color-scheme: dark) { .model-icon-template { filter: invert(1); } }
+
+/* Tight footer spacing applies only when the corresponding list is hidden. */
+body.compact-view main + footer { margin-top: 8px; padding-top: 10px; }

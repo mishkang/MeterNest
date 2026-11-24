@@ -1,0 +1,7 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "MeterNest 主窗口 IPC 权限",
+  "windows": ["panel", "settings", "hover", "main"],
+  "permissions": ["core:default", "notification:default"]
+}

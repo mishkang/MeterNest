@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src ipc: http://ipc.localhost; base-uri 'none'; form-action 'none'">
+  <title>MeterNest · 设置</title><link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="brand"><span class="brand-icon" aria-hidden="true">M</span><div><strong>MeterNest</strong><span>偏好设置</span></div></div>
+    <nav class="settings-tabs" role="tablist" aria-label="设置分类" aria-orientation="vertical">
+      <button type="button" id="tab-general" role="tab" aria-selected="true" aria-controls="general-settings"><span class="nav-icon" aria-hidden="true">◫</span>显示与启动</button>
+      <button type="button" id="tab-network" role="tab" tabindex="-1" aria-selected="false" aria-controls="network-settings"><span class="nav-icon" aria-hidden="true">↻</span>刷新与网络</button>
+      <button type="button" id="tab-automation" role="tab" tabindex="-1" aria-selected="false" aria-controls="automation-settings"><span class="nav-icon" aria-hidden="true">ϟ</span>自动任务</button>
+      <button type="button" id="tab-about" class="about-tab" role="tab" tabindex="-1" aria-selected="false" aria-controls="about-settings"><span class="nav-icon" aria-hidden="true">ⓘ</span>关于</button>
+    </nav>
+  </aside>
+  <div class="settings-main">
+    <header><h1 id="page-title">显示与启动</h1><p id="page-description">选择你关心的内容，让菜单栏保持简洁。</p></header>
+    <form id="settings" novalidate>
+      <div class="settings-sections">
+        <div id="general-settings" role="tabpanel" aria-labelledby="tab-general">
+          <div class="group-heading"><h2 id="sources-label">显示内容</h2><span class="minimum">至少保留一个来源</span></div>
+          <section aria-labelledby="sources-label">
+            <label class="setting-row"><span class="row-copy"><strong>Codex</strong><small>套餐额度与窗口恢复时间</small></span><input id="source-codex" type="checkbox" checked></label>
+            <label class="setting-row sub-row"><span class="row-copy"><strong>最近额度动态</strong><small>关闭后隐藏动态，并停止获取与动态通知</small></span><input id="show-reset-feed" type="checkbox" checked></label>
+            <label class="setting-row"><span class="row-copy"><strong>WorkBuddy</strong><small>账号与总剩余积分</small></span><input id="source-workbuddy" type="checkbox" checked></label>
+            <label class="setting-row sub-row"><span class="row-copy"><strong>积分与模型</strong><small>关闭后停止获取明细与模型，总积分继续更新</small></span><input id="show-workbuddy-history" type="checkbox" checked></label>
+          </section>
+          <h2 class="group-heading">菜单栏与启动</h2>
+          <section>
+            <label class="setting-row"><span class="row-copy"><strong id="tray-label">在图标右侧显示数值</strong><small id="tray-hint">关闭后仅显示图标</small></span><input id="tray-value" type="checkbox"></label>
+            <fieldset id="tray-source" class="tray-source" aria-label="菜单栏显示内容"><label><input type="radio" name="tray-source" value="codex" checked><span>Codex 额度</span></label><label><input type="radio" name="tray-source" value="workbuddy"><span>WorkBuddy 积分</span></label></fieldset>
+            <label class="setting-row startup-row"><span class="row-copy"><strong>登录系统时启动</strong><small id="startup-hint">仅在已安装的正式应用中可开启</small></span><input id="startup" type="checkbox" disabled></label>
+          </section>
+        </div>
+        <div id="network-settings" role="tabpanel" aria-labelledby="tab-network" hidden>
+          <div class="group-heading"><h2 id="refresh-label">自动刷新间隔</h2><span class="group-note">最少 1 分钟</span></div>
+          <section class="refresh-inputs" role="group" aria-labelledby="refresh-label">
+            <label class="setting-row" for="refresh-codex"><span>Codex 额度</span><span class="interval"><input id="refresh-codex" type="number" min="1" step="1" inputmode="numeric" required value="1"><span>分钟</span></span></label>
+            <label class="setting-row" for="refresh-workbuddy"><span class="row-copy"><strong>WorkBuddy 积分</strong><small id="refresh-workbuddy-hint">刷新积分余额和已开启的积分明细</small></span><span class="interval"><input id="refresh-workbuddy" type="number" min="1" step="1" inputmode="numeric" required value="5" aria-describedby="refresh-workbuddy-hint"><span>分钟</span></span></label>
+            <label class="setting-row" for="refresh-feed"><span class="row-copy"><strong>Codex 公开额度动态</strong><small id="refresh-feed-hint">刷新 Codex Reset FM 的公开重置消息</small></span><span class="interval"><input id="refresh-feed" type="number" min="1" step="1" inputmode="numeric" required value="10" aria-describedby="refresh-feed-hint"><span>分钟</span></span></label>
+            <label class="setting-row" for="refresh-models"><span class="row-copy"><strong>WorkBuddy 模型倍率与优惠</strong><small id="refresh-models-hint">更新「模型」页的模型列表、积分倍率和限时优惠</small></span><span class="interval"><input id="refresh-models" type="number" min="1" step="1" inputmode="numeric" required value="10" aria-describedby="refresh-models-hint"><span>分钟</span></span></label>
+          </section>
+          <p class="section-note">隐藏的来源或动态会暂停更新，原有间隔保留。</p>
+          <h2 class="group-heading">网络连接</h2>
+          <section class="network-card">
+            <label id="mode-label" for="mode">Codex 与公开动态</label>
+            <div class="mode-select" id="mode-select"><button id="mode" type="button" role="combobox" aria-labelledby="mode-label" aria-controls="mode-options" aria-expanded="false" aria-haspopup="listbox" value="proxy"><span id="mode-text">使用代理</span><span class="mode-arrow" aria-hidden="true"></span></button><div id="mode-options" role="listbox" aria-labelledby="mode-label" hidden><div id="mode-proxy" class="mode-option" role="option" data-value="proxy" aria-selected="true" tabindex="-1"><span>使用代理</span><span class="mode-check" aria-hidden="true">✓</span></div><div id="mode-direct" class="mode-option" role="option" data-value="direct" aria-selected="false" tabindex="-1"><span>直接连接</span><span class="mode-check" aria-hidden="true">✓</span></div></div></div>
+            <label class="field-label" for="proxy">代理地址</label><input id="proxy" type="text" spellcheck="false" autocomplete="off" placeholder="http://127.0.0.1:7897">
+            <p>支持 HTTP / HTTPS / SOCKS。WorkBuddy 始终独立直连。</p>
+          </section>
+        </div>
+        <div id="automation-settings" role="tabpanel" aria-labelledby="tab-automation" hidden>
+          <div class="group-heading"><h2>Codex 预热</h2><span class="group-note">默认关闭</span></div>
+          <section class="automation-card">
+            <div class="automation-row"><label class="setting-row"><span class="row-copy"><strong>Codex 操作通知</strong><small>通知手动和自动预热结果</small></span><input type="checkbox" id="codex-notify"></label></div>
+            <div class="automation-row"><label class="setting-row"><span class="row-copy"><strong>每周和5小时窗口到期预热</strong><small id="codex-window-hint">任一窗口到期检查；周恢复不受 5 小时窗口限制</small></span><input type="checkbox" id="codex-reset"></label></div>
+            <div class="automation-row"><label class="setting-row"><span class="row-copy"><strong>每日定时预热</strong><small>使用本机时间，支持数字输入与上下键调整</small></span><input type="checkbox" id="codex-daily"></label><div class="time-controls"><div id="warmup-times" aria-label="每日预热时间"></div><button type="button" id="add-time" class="add-time" aria-label="添加预热时间">＋</button></div></div>
+            <div class="automation-row wake-row"><label class="setting-row"><span class="row-copy"><strong>系统睡眠时到点唤醒</strong><small>提前约 30 秒唤醒，需一次管理员授权；关机后不执行</small></span><input type="checkbox" id="codex-wake"></label><div class="manual-row"><p id="wake-status" role="status"></p><button type="button" id="manage-wake" class="manual-action">授权安装</button></div></div>
+            <div class="automation-row warmup-row">
+              <div class="manual-row"><div><strong>现在预热</strong><p id="codex-action-status" role="status">尚未预热</p></div><button type="button" id="run-codex" class="manual-action">预热</button></div>
+              <dl class="warmup-history" aria-label="预热时间记录">
+                <div><dt>上次预热完成时间</dt><dd id="codex-previous-recovery">—</dd></div>
+                <div><dt>本次预热完成时间</dt><dd id="codex-last-success">—</dd></div>
+                <div><dt>下次额度恢复时间</dt><dd id="codex-next-recovery">—</dd></div>
+              </dl>
+            </div>
+          </section>
+          <p class="section-note">预热会发送极小请求，消耗少量额度，不会重置或增加额度。</p>
+          <div class="group-heading"><h2>WorkBuddy 签到</h2><span class="group-note">默认关闭</span></div>
+          <section class="automation-card">
+            <div class="automation-row"><label class="setting-row"><span class="row-copy"><strong>WorkBuddy 操作通知</strong><small>通知手动和自动签到结果</small></span><input type="checkbox" id="workbuddy-notify"></label></div>
+            <div class="automation-row"><label class="setting-row"><span class="row-copy"><strong>每日自动签到</strong><small>按北京时间每天一次，重启不重复签到</small></span><input type="checkbox" id="workbuddy-daily"></label></div>
+            <div class="automation-row manual-row"><div><strong>立即签到</strong><p id="workbuddy-action-status" role="status">今日尚未签到</p></div><button type="button" id="run-workbuddy" class="manual-action">签到</button></div>
+          </section>
+          <p class="section-note">仅操作本机当前账号。来源隐藏时暂停，应用退出后不执行。</p>
+        </div>
+        <div id="about-settings" role="tabpanel" aria-labelledby="tab-about" hidden>
+          <div class="about-identity">
+            <svg class="about-icon" viewBox="0 0 18 18" role="img" aria-label="MeterNest 图标"><defs><linearGradient id="about-icon-gradient" x2="1" y2="1"><stop stop-color="#203751"/><stop offset="1" stop-color="#0b172b"/></linearGradient></defs><rect x="1.5" y="1.5" width="15" height="15" rx="4" fill="url(#about-icon-gradient)"/><path d="M5 12L5 6L9 10L13 6L13 12" fill="none" stroke="#f4f8ff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <div><h2>MeterNest</h2><span id="about-version" class="version-badge"></span><p>你的额度，一处掌握。</p></div>
+          </div>
+          <section class="about-features" aria-label="应用介绍">
+            <div><h3>额度与积分，随时可见</h3><p>在菜单栏查看 Codex 剩余额度与恢复时间，以及 WorkBuddy 积分和模型倍率。</p></div>
+            <div><h3>自动任务，按需开启</h3><p>支持 Codex 预热和 WorkBuddy 每日签到。默认关闭，可手动触发或按计划执行。</p></div>
+            <div><h3>沿用本机登录</h3><p>使用客户端已有的登录状态，不代替你登录，也不保存登录凭据。</p></div>
+          </section>
+          <div class="about-notes"><p>预热会发送极小请求并消耗少量额度，不会重置或增加额度。</p><p>公开额度动态来自第三方，不代表你的账号已重置。</p></div>
+        </div>
+      </div>
+      <div class="actions"><span id="status" role="status" aria-live="polite">修改后保存生效</span><button id="save" type="submit" disabled>保存设置</button></div>
+    </form>
+    <footer><span id="version">MeterNest</span><span>登录凭据不写入 MeterNest</span></footer>
+  </div>
+  <script src="bridge-settings.js"></script>
+  <script src="renderer.js"></script>
+</body>
+</html>
