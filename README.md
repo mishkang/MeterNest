@@ -1,6 +1,18 @@
+<p align="center"><img src="docs/previews/logo.png" width="96" height="96" alt="MeterNest 标志"></p>
+
 # MeterNest
 
 MeterNest 是一款 macOS 菜单栏应用，用来查看本机 Codex 账号的剩余额度，以及 WorkBuddy 账号的积分和模型倍率。打开菜单栏里的 M 图标即可查看详情，也可以把常看的数值直接放在图标旁边。
+
+## 界面预览
+
+预览中的账号、额度、积分、公开动态和任务记录均为测试数据。
+
+| Codex 额度速览 | WorkBuddy 积分速览 |
+| --- | --- |
+| <img src="docs/previews/codex.png" width="360" alt="Codex 演示账号的 5 小时和每周额度，以及模拟额度动态"> | <img src="docs/previews/workbuddy.png" width="360" alt="WorkBuddy 演示账号的积分余额和有效期内积分明细"> |
+
+<img src="docs/previews/automation.png" width="700" alt="自动任务设置，展示 Codex 预热、WorkBuddy 签到和各自的通知开关">
 
 ## 安装与使用
 
