@@ -1,6 +1,6 @@
 [package]
 name = "meternest"
-version = "0.8.6"
+version = "0.8.7"
 description = "MeterNest · Codex 与 WorkBuddy 菜单栏额度仪表"
 authors = ["MeterNest"]
 license = "UNLICENSED"
@@ -33,6 +33,7 @@ block2 = "0.6"
 objc2 = "0.6"
 objc2-foundation = { version = "0.3", features = [
   "NSString",
+  "NSLocale",
   "NSArray",
   "NSDictionary",
   "NSDate",

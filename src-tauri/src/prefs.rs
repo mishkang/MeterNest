@@ -178,6 +178,7 @@ pub fn validate_automation(value: Value) -> Result<Value, String> {
 // settings.js
 pub fn defaults() -> Value {
     json!({
+        "language": "system",
         "showResetFeed": true,
         "showWorkBuddyHistory": true,
         "openAtLogin": false,
@@ -253,7 +254,13 @@ pub fn validate_settings(value: &Value) -> Result<Value, String> {
             };
             let automation = validate_automation(value.get("automation").cloned().unwrap_or(default_automation()))?;
             let tray_source = enabled_tray_source(&tray_value_source, &enabled_providers);
+            let language = match value.get("language") {
+                None => "system",
+                Some(value) => value.as_str().filter(|language| crate::i18n::valid_preference(language))
+                    .ok_or_else(|| "界面语言无效".to_string())?,
+            };
             Ok(json!({
+                "language": language,
                 "showResetFeed": show_reset_feed,
                 "showWorkBuddyHistory": show_workbuddy_history,
                 "openAtLogin": login,
@@ -289,6 +296,11 @@ pub fn read_preferences(saved: &Value) -> Value {
                 "openAtLogin" | "showTrayValue" => {
                     if let Some(flag) = value.as_bool() {
                         merged[key] = json!(flag);
+                    }
+                }
+                "language" => {
+                    if value.as_str().is_some_and(crate::i18n::valid_preference) {
+                        merged[key] = value.clone();
                     }
                 }
                 "networkMode" => {

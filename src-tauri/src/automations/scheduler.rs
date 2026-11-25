@@ -682,7 +682,12 @@ fn notify_action(core: &Core, provider: &str, manual: bool, message: String) {
         _ => "WorkBuddy 自动签到",
     };
     if core.packaged {
-        crate::macos::notifications::show(&core.app, title, message);
+        let language = crate::i18n::resolve(&core.prefs());
+        crate::macos::notifications::show(
+            &core.app,
+            crate::i18n::text(language, title),
+            crate::i18n::text(language, &message).to_string(),
+        );
     }
 }
 

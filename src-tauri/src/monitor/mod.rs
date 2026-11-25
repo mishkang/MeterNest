@@ -175,7 +175,7 @@ pub fn publish(core: &mut Core) {
         }
     }
     crate::automations::scheduler::on_quota_update(core, state.clone());
-    hover_update(core, hover_summary(&state));
+    hover_update(core, hover_summary(&state, crate::i18n::resolve(&core.prefs())));
     update_tray_title(core);
 }
 
@@ -693,6 +693,13 @@ fn show_reset_notification(core: &mut Core, payload: Value) {
     let app = core.app.clone();
     let title = payload.get("title").and_then(Value::as_str).unwrap_or("").to_string();
     let body = payload.get("body").and_then(Value::as_str).unwrap_or("").to_string();
+    let language = crate::i18n::resolve(&core.prefs());
+    let title = crate::i18n::text(language, &title);
+    let body = if let Some((record, description)) = body.rsplit_once('\n') {
+        format!("{record}\n{}", crate::i18n::text(language, description))
+    } else {
+        body
+    };
     let _ = app.notification().builder().title(title).body(body).show();
 }
 

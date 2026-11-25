@@ -46,7 +46,8 @@ pub fn tray_value_title(state: &Value, preferences: &Value) -> String {
 }
 
 /// hover.js hoverSummary.
-pub fn hover_summary(state: &Value) -> Value {
+pub fn hover_summary(state: &Value, language: &str) -> Value {
+    use crate::i18n::{format, text};
     let account = state.get("account").cloned().unwrap_or(Value::Null);
     let bucket = account
         .get("buckets")
@@ -75,13 +76,13 @@ pub fn hover_summary(state: &Value) -> Value {
             Value::String(match remaining {
                 Some(value) if value.is_finite() => {
                     let suffix = if !account_error.is_empty() { " · 上次结果" } else { "" };
-                    format!("剩余 {}%{}", value, suffix)
+                    format(language, "剩余 {0}%{1}", &[&value.to_string(), text(language, suffix)])
                 }
                 _ => {
                     if account_loading {
-                        "正在查询…".to_string()
+                        text(language, "正在查询…").to_string()
                     } else {
-                        "暂不可读".to_string()
+                        text(language, "暂不可读").to_string()
                     }
                 }
             }),
@@ -93,13 +94,13 @@ pub fn hover_summary(state: &Value) -> Value {
             Value::String(match balance {
                 Some(value) if value.is_finite() => {
                     let suffix = if !workbuddy_error.is_empty() { " · 上次结果" } else { "" };
-                    format!("{} 积分{}", locale_number(value, 2, 0), suffix)
+                    format(language, "{0} 积分{1}", &[&locale_number(value, 2, 0), text(language, suffix)])
                 }
                 _ => {
                     if workbuddy_loading {
-                        "正在查询…".to_string()
+                        text(language, "正在查询…").to_string()
                     } else {
-                        "暂不可读".to_string()
+                        text(language, "暂不可读").to_string()
                     }
                 }
             }),

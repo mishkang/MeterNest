@@ -1,13 +1,15 @@
 const $ = id => document.getElementById(id)
-const errorMessage = error => typeof error === 'string' ? error : error?.message || '操作未完成，请重试'
-let initialRender = true, requestedPage
+const errorMessage = error => i18n.message(typeof error === 'string' ? error : error?.message || '操作未完成，请重试')
+let requestedPage
 function render(value) {
+  i18n.set(value.locale)
+  $('language').value = value.language || 'system'
   $('show-reset-feed').checked = value.showResetFeed !== false
   $('show-workbuddy-history').checked = value.showWorkBuddyHistory !== false
   for (const key of ['codex', 'workbuddy']) $(`source-${key}`).checked = value.enabledProviders[key]
   $('startup').checked = value.openAtLogin
   $('startup').disabled = !value.startupSupported
-  $('startup-hint').textContent = value.startupSupported ? '下次登录时仅启动菜单栏，首次自动查询延迟 10 秒。' : '请先安装正式应用，再开启登录启动。'
+  $('startup-hint').textContent = value.startupSupported ? i18n.t('下次登录时仅启动菜单栏，首次自动查询延迟 10 秒。') : i18n.t('请先安装正式应用，再开启登录启动。')
   setMode(value.networkMode)
   $('proxy').value = value.proxyUrl
   $('proxy').disabled = value.networkMode === 'direct'
@@ -16,10 +18,11 @@ function render(value) {
   syncSourceControls()
   for (const key of ['codex', 'workbuddy', 'feed', 'models']) $(`refresh-${key}`).value = value.refreshMinutes[key]
   $('version').textContent = `MeterNest ${value.version}`
-  $('about-version').textContent = `版本 ${value.version}`
+  $('about-version').textContent = i18n.t("版本 {0}", value.version)
   renderAutomation(value)
   $('save').disabled = false
-  if (initialRender) { initialRender = false; selectTab(settingPages[requestedPage || value.initialPage] ? requestedPage || value.initialPage : 'general') }
+  selectTab(settingPages[requestedPage || value.initialPage] ? requestedPage || value.initialPage : 'general')
+  fitToAutomationPage()
 }
 const modeOptions = Array.from($('mode-options').querySelectorAll('[role=option]'))
 function setMode(value) {
@@ -81,15 +84,15 @@ function syncSourceControls() {
 for (const key of ['codex', 'workbuddy']) $(`source-${key}`).addEventListener('change', () => {
   if (!Object.values(sourceChoices()).some(Boolean)) {
     $(`source-${key}`).checked = true
-    $('status').textContent = '至少保留一个显示来源'
-  } else $('status').textContent = '保存后生效'
+    $('status').textContent = i18n.t('至少保留一个显示来源')
+  } else $('status').textContent = i18n.t('保存后生效')
   syncSourceControls()
   syncAutomationControls()
 })
 $('tray-value').addEventListener('change', syncSourceControls)
 $('show-reset-feed').addEventListener('change', syncSourceControls)
 $('show-workbuddy-history').addEventListener('change', syncSourceControls)
-function markDirty() { $('status').textContent = '有未保存的修改' }
+function markDirty() { $('status').textContent = i18n.t('有未保存的修改') }
 $('settings').addEventListener('input', markDirty)
 $('settings').addEventListener('submit', async event => {
   event.preventDefault()
@@ -98,7 +101,7 @@ $('settings').addEventListener('submit', async event => {
     const input = $(`refresh-${key}`)
     const value = input.value.trim()
     if (!/^[0-9]+$/.test(value) || !Number.isSafeInteger(Number(value)) || Number(value) < 1) {
-      $('status').textContent = '刷新间隔必须是不小于 1 的正整数（分钟）'
+      $('status').textContent = i18n.t('刷新间隔必须是不小于 1 的正整数（分钟）')
       selectTab('network')
       input.focus()
       return
@@ -108,20 +111,19 @@ $('settings').addEventListener('submit', async event => {
   let automation
   try { automation = automationDraft() } catch (error) { $('status').textContent = errorMessage(error); selectTab('automation'); return }
   $('save').disabled = true
-  $('status').textContent = '正在保存…' 
+  $('status').textContent = i18n.t('正在保存…')
   try {
     let notificationDenied = false
     if (automation.codex.notify || automation.workbuddy.notify) {
       notificationDenied = !await window.meterNestSettings.authorizeNotifications()
     }
-    render(await window.meterNestSettings.save({ automation, showWorkBuddyHistory: $('show-workbuddy-history').checked, showResetFeed: $('show-reset-feed').checked, enabledProviders: sourceChoices(), refreshMinutes, openAtLogin: $('startup').checked, networkMode: $('mode').value, proxyUrl: $('proxy').value, showTrayValue: $('tray-value').checked, trayValueSource: document.querySelector('input[name="tray-source"]:checked').value }))
-    $('status').textContent = notificationDenied ? '已保存，请在系统设置中允许 MeterNest 通知' : '已保存，设置已生效'
+    render(await window.meterNestSettings.save({ language: $('language').value, automation, showWorkBuddyHistory: $('show-workbuddy-history').checked, showResetFeed: $('show-reset-feed').checked, enabledProviders: sourceChoices(), refreshMinutes, openAtLogin: $('startup').checked, networkMode: $('mode').value, proxyUrl: $('proxy').value, showTrayValue: $('tray-value').checked, trayValueSource: document.querySelector('input[name="tray-source"]:checked').value }))
+    $('status').textContent = notificationDenied ? i18n.t('已保存，请在系统设置中允许 MeterNest 通知') : i18n.t('已保存，设置已生效')
   } catch (error) { $('status').textContent = errorMessage(error); $('save').disabled = false }
 })
 window.meterNestSettings.read().then(value => {
   render(value)
-  fitToAutomationPage()
-}).catch(() => { $('status').textContent = '读取设置失败，请关闭后重试' })
+}).catch(() => { $('status').textContent = i18n.t('读取设置失败，请关闭后重试') })
 
 const settingPages = { general: ['显示与启动', '选择你关心的内容，让菜单栏保持简洁。'], network: ['刷新与网络', '按你的使用习惯，安排更新频率与连接方式。'], automation: ['自动任务', '预热与签到，交给 MeterNest 按时处理。'], about: ['关于', 'Codex 与 WorkBuddy 的菜单栏额度助手。'] }
 const pageKeys = Object.keys(settingPages)
@@ -137,8 +139,8 @@ function selectTab(name) {
     $(`${key}-settings`).hidden = !active
   }
   document.querySelector('.actions').hidden = name === 'about'
-  $('page-title').textContent = settingPages[name][0]
-  $('page-description').textContent = settingPages[name][1]
+  $('page-title').textContent = i18n.t(settingPages[name][0])
+  $('page-description').textContent = i18n.t(settingPages[name][1])
   if (name === 'automation') window.meterNestSettings.automationState().then(renderActionState).catch(() => {})
 }
 for (const name of pageKeys) {
@@ -160,7 +162,7 @@ function addTime(time = '09:00') {
     if (index) chip.append(document.createTextNode(':'))
     const input = document.createElement('input')
     input.type = 'text'; input.inputMode = 'numeric'; input.maxLength = 2; input.value = parts[index]
-    input.setAttribute('aria-label', index ? '分钟' : '小时')
+    input.setAttribute('aria-label', index ? i18n.t('分钟') : i18n.t('小时'))
     const maximum = index ? 59 : 23
     input.addEventListener('focus', () => input.select())
     input.addEventListener('input', () => { input.value = input.value.replace(/[^0-9]/g, '').slice(0, 2) })
@@ -172,16 +174,16 @@ function addTime(time = '09:00') {
     })
     chip.append(input)
   }
-  const remove = document.createElement('button'); remove.type = 'button'; remove.textContent = '×'; remove.setAttribute('aria-label', '移除此时间')
+  const remove = document.createElement('button'); remove.type = 'button'; remove.textContent = '×'; remove.setAttribute('aria-label', i18n.t('移除此时间'))
   remove.addEventListener('click', () => { chip.remove(); syncAutomationControls(); markDirty() })
   chip.append(remove); $('warmup-times').append(chip)
 }
 let wakeState = {}, wakeBusy = false
 function renderWakeState(value) {
   wakeState = value
-  $('manage-wake').textContent = value.installed ? '移除组件' : '授权安装'
+  $('manage-wake').textContent = value.installed ? i18n.t('移除组件') : i18n.t('授权安装')
   $('manage-wake').disabled = wakeBusy || !value.available
-  $('wake-status').textContent = value.error || (!value.available ? '正式安装的应用中可授权使用' : !value.installed ? '尚未授权；仅在点击授权时请求管理员权限' : value.outcome === 'error' ? '系统未能登记唤醒计划，请检查电源设置' : value.scheduledAt ? '已安排唤醒 ' + new Date(value.scheduledAt).toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : '组件已安装；启用开关并保存后生效')
+  $('wake-status').textContent = i18n.message(value.error) || (!value.available ? i18n.t('正式安装的应用中可授权使用') : !value.installed ? i18n.t('尚未授权；仅在点击授权时请求管理员权限') : value.outcome === 'error' ? i18n.t('系统未能登记唤醒计划，请检查电源设置') : value.scheduledAt ? i18n.t('已安排唤醒 {0}', new Date(value.scheduledAt).toLocaleString(i18n.language, { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })) : i18n.t('组件已安装；启用开关并保存后生效'))
 }
 $('manage-wake').addEventListener('click', async () => {
   if (wakeBusy) return
@@ -193,9 +195,9 @@ $('manage-wake').addEventListener('click', async () => {
 })
 function automationDraft() {
   const inputs = Array.from($('warmup-times').querySelectorAll('input'))
-  if (inputs.some(input => !/^[0-9]{1,2}$/.test(input.value))) throw new Error('请填写完整的小时和分钟。')
+  if (inputs.some(input => !/^[0-9]{1,2}$/.test(input.value))) throw new Error(i18n.t('请填写完整的小时和分钟。'))
   const times = Array.from($('warmup-times').children, chip => Array.from(chip.querySelectorAll('input'), input => input.value.padStart(2, '0')).join(':'))
-  if (times.some(time => !/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(time)) || new Set(times).size !== times.length || $('codex-daily').checked && !times.length) throw new Error('请填写有效、不重复的时间；每日定时至少保留一个时间。')
+  if (times.some(time => !/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(time)) || new Set(times).size !== times.length || $('codex-daily').checked && !times.length) throw new Error(i18n.t('请填写有效、不重复的时间；每日定时至少保留一个时间。'))
   return { codex: { notify: $('codex-notify').checked, wake: $('codex-wake').checked, onReset: $('codex-reset').checked, daily: $('codex-daily').checked, times }, workbuddy: { notify: $('workbuddy-notify').checked, daily: $('workbuddy-daily').checked } }
 }
 function renderAutomation(value) {
@@ -226,29 +228,37 @@ function syncAutomationControls() {
   for (const p of ['codex', 'workbuddy']) $(`run-${p}`).disabled = !savedSources[p] || !sources[p] || Boolean(actionState[p]?.running)
 }
 const outcomes = { idle: '尚未执行', error: '执行失败，请重试', pending: '今日尚未签到', confirmed: '预热成功', sent: '预热请求已完成', skipped: '当前窗口已开始，已跳过预热', claimed: '签到成功', done: '今天已经签到', inactive: '当前没有可参加的签到活动', ineligible: '当前账号不符合签到条件', 'own-app': '请在 WorkBuddy 客户端完成签到', uncertain: '请求结果未确认，本次不自动重试' }
+function windowSupportMessage(state) {
+  const minutes = state.windowDurationMinutes
+  if (!minutes) return i18n.t('未读取到 5 小时或每周额度窗口，当前套餐不支持窗口到期预热。')
+  const [unit, size] = [['{0} 周', 10080], ['{0} 天', 1440], ['{0} 小时', 60], ['{0} 分钟', 1]]
+    .find(([, divisor]) => minutes % divisor === 0) || ['{0} 分钟', 1]
+  return i18n.t('当前套餐仅提供 {0} 额度窗口，不支持窗口到期预热。', i18n.t(unit, minutes / size))
+}
+
 function renderActionState(value) {
   actionState = value
   if (value.wake) renderWakeState(value.wake)
   for (const p of ['codex', 'workbuddy']) {
     const s = value[p] || {}
     const unsupported = p === 'codex' && s.windowSupported === false
-    let text = s.running ? (p === 'codex' ? '正在预热…' : '正在签到…') : s.checking ? '正在检查…' : s.paused ? '来源已隐藏，任务暂停' : s.message || outcomes[s.outcome] || '尚未执行'
+    let text = s.running ? (p === 'codex' ? i18n.t('正在预热…') : i18n.t('正在签到…')) : s.checking ? i18n.t('正在检查…') : s.paused ? i18n.t('来源已隐藏，任务暂停') : i18n.message(s.message || outcomes[s.outcome] || '尚未执行')
     if (s.outcome === 'error' && !s.running && !s.checking && !s.paused) {
-      if (s.retryAt > Date.now()) text += ` · 将于 ${new Date(s.retryAt).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', hour12: false })} 重试`
-      else if (s.retryStopped) text += ' · 已达到自动重试次数上限'
+      if (s.retryAt > Date.now()) text += i18n.t(" · 将于 {0} 重试", new Date(s.retryAt).toLocaleTimeString(i18n.language, { hour: '2-digit', minute: '2-digit', hour12: false }))
+      else if (s.retryStopped) text += i18n.t(' · 已达到自动重试次数上限')
     }
-    if (!s.running && !s.paused && !s.message && ['claimed', 'done'].includes(s.outcome) && Number.isFinite(s.credit)) text += ` · +${s.credit} 积分`
+    if (!s.running && !s.paused && !s.message && ['claimed', 'done'].includes(s.outcome) && Number.isFinite(s.credit)) text += i18n.t(" · +{0} 积分", s.credit)
     if (p === 'codex') {
       $('codex-window-hint').textContent = unsupported
-        ? s.windowMessage || '当前套餐不支持窗口到期预热。'
-        : '任一窗口到期检查；周恢复不受 5 小时窗口限制'
+        ? windowSupportMessage(s)
+        : i18n.t('任一窗口到期检查；周恢复不受 5 小时窗口限制')
       const formatTime = (time, empty) => Number.isFinite(time) && time > 0
-        ? new Date(time).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23' })
+        ? new Date(time).toLocaleString(i18n.language, { timeZone: 'Asia/Shanghai', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23' })
         : empty
-      $('codex-previous-recovery').textContent = formatTime(s.previousWarmupCompletedAt, '无历史记录')
-      $('codex-last-success').textContent = formatTime(s.warmupCompletedAt, '尚无完成记录')
-      $('codex-next-recovery').textContent = formatTime(s.nextQuotaRecoveryAt, '待额度更新')
-    } else if (!s.running && s.at && !s.paused) text += ` · ${s.trigger === 'status' ? '查询于 ' : ''}${new Date(s.at).toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false })}`
+      $('codex-previous-recovery').textContent = formatTime(s.previousWarmupCompletedAt, i18n.t('无历史记录'))
+      $('codex-last-success').textContent = formatTime(s.warmupCompletedAt, i18n.t('尚无完成记录'))
+      $('codex-next-recovery').textContent = formatTime(s.nextQuotaRecoveryAt, i18n.t('待额度更新'))
+    } else if (!s.running && s.at && !s.paused) text += ` · ${s.trigger === 'status' ? i18n.t('查询于 ') : ''}${new Date(s.at).toLocaleString(i18n.language, { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false })}`
     $(`${p}-action-status`).textContent = text
   }
   syncAutomationControls()
@@ -261,7 +271,7 @@ $('add-time').addEventListener('click', () => {
 for (const p of ['codex', 'workbuddy']) $(`run-${p}`).addEventListener('click', async () => {
   actionState[p] = { ...actionState[p], running: true }; renderActionState(actionState)
   try { renderActionState(await window.meterNestSettings.runAutomation(p)) }
-  catch { actionState[p] = { running: false, message: '操作未完成，请检查来源设置与登录状态后重试。' }; renderActionState(actionState) }
+  catch { actionState[p] = { running: false, message: i18n.t('操作未完成，请检查来源设置与登录状态后重试。') }; renderActionState(actionState) }
 })
 const unsubscribeNavigate = window.meterNestSettings.onNavigate(selectTab)
 window.addEventListener('beforeunload', unsubscribeNavigate, { once: true })

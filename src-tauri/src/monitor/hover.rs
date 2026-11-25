@@ -68,7 +68,7 @@ pub fn request_update(core: &mut Core) {
         return;
     }
     if let Some(window) = core.app.get_webview_window("hover") {
-        let summary = crate::monitor::tray_title::hover_summary(&core.monitor.state);
+        let summary = crate::monitor::tray_title::hover_summary(&core.monitor.state, crate::i18n::resolve(&core.prefs()));
         let _ = window.emit_to("hover", "meternest-hover-updated", &summary);
     }
 }

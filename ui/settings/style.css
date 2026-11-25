@@ -25,3 +25,7 @@ input[type=checkbox]{appearance:none;flex-shrink:0;position:relative;width:29px;
 .warmup-history{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:10px 0 0;padding:0 15px 13px}
 .warmup-history dt{font-size:10px;color:var(--muted);margin-bottom:3px}
 .warmup-history dd{margin:0;font-size:11px;font-variant-numeric:tabular-nums;white-space:nowrap}
+
+#language{font:inherit;color:inherit;max-width:50%;padding:6px 9px;border:1px solid var(--line);border-radius:7px;background:var(--input)}
+.settings-tabs button{white-space:normal}
+.settings-tabs .nav-icon{flex-shrink:0}

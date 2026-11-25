@@ -127,6 +127,7 @@ pub fn meternest_hover_fit(width: f64, height: f64, window: tauri::WebviewWindow
 fn settings_snapshot(core: &mut crate::core::Core) -> Value {
     let prefs = core.prefs();
     let mut value = prefs.clone();
+    value["locale"] = crate::i18n::payload(crate::i18n::resolve(&prefs));
     value["version"] = json!(core.app.package_info().version.to_string());
     value["initialPage"] = json!(core.settings.selected_page);
     value["startupSupported"] = json!(core.packaged);
@@ -161,8 +162,7 @@ pub fn meternest_settings_save(value: Value, window: tauri::WebviewWindow, state
         if validated["automation"]["codex"]["onReset"].as_bool().unwrap_or(false)
             && !crate::automations::scheduler::codex_window_supported(core)
         {
-            let message = core.scheduler.codex_window_support["message"].as_str().unwrap_or("当前套餐不支持窗口到期预热。");
-            let _ = tx.send(Err(AppError::message(format!("{} 请关闭“每周和5小时窗口到期预热”后保存。", message))));
+            let _ = tx.send(Err(AppError::message("请关闭“每周和5小时窗口到期预热”后保存。")));
             return;
         }
         let previous = core.prefs();
@@ -183,6 +183,9 @@ pub fn meternest_settings_save(value: Value, window: tauri::WebviewWindow, state
             };
             let _ = tx.send(Err(AppError::message(message)));
             return;
+        }
+        if previous["language"] != core.prefs()["language"] {
+            crate::i18n::apply(core);
         }
         // onChanged: propagate to monitor, tray, scheduler and wake.
         crate::monitor::update_provider_settings(core);

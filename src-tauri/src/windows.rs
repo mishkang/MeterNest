@@ -41,7 +41,8 @@ pub fn ensure_panel_window(core: &mut Core) -> bool {
     }
     let app = core.app.clone();
     let window = WebviewWindowBuilder::new(&app, "panel", WebviewUrl::App("codex-monitor/panel.html".into()))
-        .title("额度速览")
+        .title(crate::i18n::text(crate::i18n::resolve(&core.prefs()), "额度速览"))
+        .initialization_script(crate::i18n::initialization_script(core))
         .initialization_script("document.addEventListener('contextmenu', event => event.preventDefault(), true)")
         .inner_size(PANEL_WIDTH + 2.0 * PANEL_SHADOW_SIDE, 744.0 + PANEL_SHADOW_BOTTOM)
         .decorations(false)
@@ -98,7 +99,8 @@ pub fn ensure_settings_window(core: &mut Core) {
         return;
     }
     let builder = WebviewWindowBuilder::new(&app, "settings", WebviewUrl::App("settings/index.html".into()))
-        .title("MeterNest · 设置")
+        .title(format!("MeterNest · {}", crate::i18n::text(crate::i18n::resolve(&core.prefs()), "设置")))
+        .initialization_script(crate::i18n::initialization_script(core))
         .initialization_script("document.addEventListener('contextmenu', event => event.preventDefault(), true)")
         .inner_size(700.0, 700.0)
         .resizable(false)
@@ -163,7 +165,8 @@ pub fn ensure_hover_window(core: &mut Core) -> bool {
     }
     let app = core.app.clone();
     let window = WebviewWindowBuilder::new(&app, "hover", WebviewUrl::App("codex-monitor/hover.html".into()))
-        .title("MeterNest 额度提示")
+        .title(crate::i18n::text(crate::i18n::resolve(&core.prefs()), "MeterNest 额度提示"))
+        .initialization_script(crate::i18n::initialization_script(core))
         .initialization_script("document.addEventListener('contextmenu', event => event.preventDefault(), true)")
         .inner_size(160.0, 42.0)
         .decorations(false)

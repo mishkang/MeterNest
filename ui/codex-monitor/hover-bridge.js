@@ -8,7 +8,7 @@
     for (const provider of ['codex', 'workbuddy']) {
       const node = document.getElementById(provider)
       node.closest('.row').hidden = !Object.hasOwn(value, provider)
-      node.textContent = value[provider] || ''
+      node.textContent = i18n.t(value[provider] || '')
     }
     const box = document.body.getBoundingClientRect()
     return { width: Math.ceil(box.width), height: Math.ceil(box.height) }
@@ -17,6 +17,7 @@
     const size = setSummary(value)
     return invoke('meternest_hover_fit', { width: size.width, height: size.height })
   }
+  listen('meternest-locale', event => i18n.set(event.payload))
   listen('meternest-hover-updated', event => update(event.payload).catch(() => {}))
   invoke('meternest_hover_ready').catch(() => {})
 })()

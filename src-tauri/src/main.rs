@@ -1,5 +1,6 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+mod i18n;
 mod automations;
 mod bridge;
 mod constants;
@@ -70,7 +71,7 @@ fn main() {
             let login_startup = login_startup::LoginStartup::new(util::is_packaged());
             let at_login = tray_only || login_startup.was_opened_at_login(&argv);
             app.manage(handle);
-            build_tray(app)?;
+            build_tray(app, i18n::resolve(&core.prefs()))?;
             // Power & event monitors run on the main thread.
             let monitor_handle = app.state::<CoreHandle>().inner().clone();
             let _ = app.run_on_main_thread(move || {
@@ -214,12 +215,12 @@ fn build_application_menu(app: &tauri::App) -> tauri::Result<()> {
     Ok(())
 }
 
-fn build_tray(app: &tauri::App) -> tauri::Result<()> {
-    let view = MenuItem::with_id(app, "tray-view", "额度速览", true, None::<&str>)?;
-    let refresh = MenuItem::with_id(app, "tray-refresh", "刷新数据", true, None::<&str>)?;
-    let settings = MenuItem::with_id(app, "tray-settings", "设置", true, None::<&str>)?;
-    let about = MenuItem::with_id(app, "tray-about", "关于", true, None::<&str>)?;
-    let quit = PredefinedMenuItem::quit(app, Some("退出"))?;
+fn set_tray_menu(app: &tauri::AppHandle, language: &str) -> tauri::Result<()> {
+    let view = MenuItem::with_id(app, "tray-view", i18n::text(language, "额度速览"), true, None::<&str>)?;
+    let refresh = MenuItem::with_id(app, "tray-refresh", i18n::text(language, "刷新数据"), true, None::<&str>)?;
+    let settings = MenuItem::with_id(app, "tray-settings", i18n::text(language, "设置"), true, None::<&str>)?;
+    let about = MenuItem::with_id(app, "tray-about", i18n::text(language, "关于"), true, None::<&str>)?;
+    let quit = PredefinedMenuItem::quit(app, Some(i18n::text(language, "退出")))?;
     let menu = Menu::with_items(
         app,
         &[
@@ -234,7 +235,14 @@ fn build_tray(app: &tauri::App) -> tauri::Result<()> {
     let Some(tray) = app.tray_by_id("main") else {
         return Ok(());
     };
-    tray.set_menu(Some(menu))?;
+    tray.set_menu(Some(menu))
+}
+
+fn build_tray(app: &tauri::App, language: &str) -> tauri::Result<()> {
+    set_tray_menu(app.handle(), language)?;
+    let Some(tray) = app.tray_by_id("main") else {
+        return Ok(());
+    };
     tray.set_show_menu_on_left_click(false)?;
     tray.on_menu_event(|app, event| {
         let state = app.state::<CoreHandle>();

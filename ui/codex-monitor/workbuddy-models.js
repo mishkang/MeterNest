@@ -32,7 +32,7 @@ function sanitizePromotion(item) {
       displayMode: discount.displayMode === 'replace' ? 'replace' : 'strikethrough' } : null }
 }
 function normalizeModels(config) {
-  if (!Array.isArray(config?.models) || config.models.length > 1000) throw new Error('模型配置格式无效')
+  if (!Array.isArray(config?.models) || config.models.length > 1000) throw new Error(i18n.t('模型配置格式无效'))
   const agents = Array.isArray(config.agents) ? config.agents : []
   const cli = agents.find(agent => agent.tags?.includes('default')) || agents.find(agent => agent.name === 'cli') || agents.find(agent => agent.models?.length)
   const order = Array.isArray(cli?.models) ? cli.models.flatMap(id => id === 'auto' && config.productFeatures?.EnableAutoModelTiers

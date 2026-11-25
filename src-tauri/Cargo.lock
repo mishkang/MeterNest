@@ -2148,7 +2148,7 @@ dependencies = [
 
 [[package]]
 name = "meternest"
-version = "0.8.6"
+version = "0.8.7"
 dependencies = [
  "base64 0.22.1",
  "block2",

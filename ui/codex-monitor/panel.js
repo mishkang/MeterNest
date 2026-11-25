@@ -6,10 +6,13 @@ let creditPeriod = 'valid'
 const CREDIT_PAGE_SIZE = 5
 const creditPages = { valid: 1, expired: 1 }
 let selectionRevision = 0
-const dateFormat = new Intl.DateTimeFormat('zh-CN', { timeZone: 'Asia/Shanghai', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })
-const date = value => value ? dateFormat.format(new Date(typeof value === 'number' ? value * 1000 : value)) : '暂不可用'
-const compactDate = value => value ? date(value).slice(5, 16) : '暂不可用'
-const credits = value => value.toLocaleString('zh-CN', { maximumFractionDigits: 2 })
+const formatDate = (value, compact) => value ? new Intl.DateTimeFormat(i18n.language, {
+  timeZone: 'Asia/Shanghai', ...(compact ? {} : {year: 'numeric', second: '2-digit'}),
+  month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23'
+}).format(new Date(typeof value === 'number' ? value * 1000 : value)) : i18n.t('暂不可用')
+const date = value => formatDate(value, false)
+const compactDate = value => formatDate(value, true)
+const credits = value => value.toLocaleString(i18n.language, { maximumFractionDigits: 2 })
 function element(tag, className, text) {
   const node = document.createElement(tag)
   if (className) node.className = className
@@ -17,48 +20,48 @@ function element(tag, className, text) {
   return node
 }
 function duration(minutes) {
-  if (!minutes) return '额度窗口'
-  if (minutes % 10080 === 0) return `${minutes / 10080} 周额度`
-  if (minutes % 1440 === 0) return `${minutes / 1440} 天额度`
-  if (minutes % 60 === 0) return `${minutes / 60} 小时额度`
-  return `${minutes} 分钟额度`
+  if (!minutes) return i18n.t('额度窗口')
+  if (minutes % 10080 === 0) return i18n.t("{0} 周额度", minutes / 10080)
+  if (minutes % 1440 === 0) return i18n.t("{0} 天额度", minutes / 1440)
+  if (minutes % 60 === 0) return i18n.t("{0} 小时额度", minutes / 60)
+  return i18n.t("{0} 分钟额度", minutes)
 }
 function remaining(at) {
   if (!at) return ''
   const minutes = Math.ceil((at * 1000 - Date.now()) / 60000)
-  if (minutes <= 0) return ' · 已到恢复时间，刷新确认'
-  if (minutes >= 1440) return ` · 约 ${Math.floor(minutes / 1440)} 天 ${Math.floor(minutes % 1440 / 60)} 小时后`
-  return ` · 约 ${Math.floor(minutes / 60)} 小时 ${minutes % 60} 分后`
+  if (minutes <= 0) return i18n.t(' · 已到恢复时间，刷新确认')
+  if (minutes >= 1440) return i18n.t(" · 约 {0} 天 {1} 小时后", Math.floor(minutes / 1440), Math.floor(minutes % 1440 / 60))
+  return i18n.t(" · 约 {0} 小时 {1} 分后", Math.floor(minutes / 60), minutes % 60)
 }
 function updateTime(updatedAt, loading, error) {
-  if (!updatedAt) return loading ? '正在查询…' : error ? '更新失败' : ''
-  return `更新于 ${date(updatedAt)}${loading ? ' · 正在更新' : error ? ' · 更新失败' : ''}`
+  if (!updatedAt) return loading ? i18n.t('正在查询…') : error ? i18n.t('更新失败') : ''
+  return i18n.t("更新于 {0}{1}", date(updatedAt), loading ? i18n.t(' · 正在更新') : error ? i18n.t(' · 更新失败') : '')
 }
 function renderUsage(state) {
   const container = document.getElementById('usage')
   container.replaceChildren()
   const account = state.account
-  document.getElementById('identity').textContent = account?.identity || '通过本机 Codex 只读接口获取'
-  document.getElementById('plan').textContent = account?.plan || '本机'
-  if (!account || account.status !== 'ready') container.append(element('p', 'empty', state.accountError || account?.message || '正在读取额度…'))
-  else if (state.accountError) container.append(element('p', 'empty', state.accountError))
+  document.getElementById('identity').textContent = account?.identity || i18n.t('通过本机 Codex 只读接口获取')
+  document.getElementById('plan').textContent = i18n.t(account?.plan || '本机')
+  if (!account || account.status !== 'ready') container.append(element('p', 'empty', i18n.message(state.accountError || account?.message) || i18n.t('正在读取额度…')))
+  else if (state.accountError) container.append(element('p', 'empty', i18n.message(state.accountError)))
   for (const bucket of account?.buckets || []) {
     if (account.buckets.length > 1) container.append(element('p', 'bucket-name', bucket.name))
     for (const quota of [bucket.primary, bucket.secondary].filter(Boolean)) {
       const item = element('div', `quota${quota.remainingPercent <= 15 ? ' low' : ''}`)
       const heading = element('div', 'quota-heading')
-      heading.append(element('span', '', duration(quota.windowDurationMins)), element('strong', '', `${quota.remainingPercent}% 剩余`))
+      heading.append(element('span', '', duration(quota.windowDurationMins)), element('strong', '', i18n.t("{0}% 剩余", quota.remainingPercent)))
       const track = element('div', 'track')
       const fill = element('div', 'fill')
       fill.style.width = `${quota.remainingPercent}%`
       track.append(fill)
-      const recovery = element('div', 'quota-time', `恢复：${compactDate(quota.resetsAt)}${remaining(quota.resetsAt)}`)
+      const recovery = element('div', 'quota-time', i18n.t("恢复：{0}{1}", compactDate(quota.resetsAt), remaining(quota.resetsAt)))
       recovery.title = date(quota.resetsAt)
       item.append(heading, track, recovery)
       container.append(item)
     }
   }
-  document.getElementById('reset-credits').textContent = account?.resetCredits != null ? `可用重置次数：${account.resetCredits}` : ''
+  document.getElementById('reset-credits').textContent = account?.resetCredits != null ? i18n.t("可用重置次数：{0}", account.resetCredits) : ''
   document.getElementById('usage-time').title = date(state.updatedAt)
   document.getElementById('usage-time').textContent = updateTime(state.updatedAt, state.accountLoading ?? state.loading, state.accountError)
 }
@@ -71,27 +74,27 @@ function renderRecords(state) {
     const card = element('article', 'record')
     const complete = record.stage === 'completed'
     const displayAt = complete ? record.completedAt : record.announcedAt
-    const time = element('time', '', `${complete ? '完成时间' : '公告时间'}：${date(displayAt)}`)
+    const time = element('time', '', `${complete ? i18n.t('完成时间') : i18n.t('公告时间')}：${date(displayAt)}`)
     if (displayAt) time.dateTime = displayAt
     const heading = element('div', 'record-title')
-    heading.append(element('h3', '', record.title), element('span', `badge ${complete ? 'done' : 'pending'}`, complete ? '已完成' : '待确认'))
+    heading.append(element('h3', '', record.title), element('span', `badge ${complete ? 'done' : 'pending'}`, complete ? i18n.t('已完成') : i18n.t('待确认')))
     const posts = (record.posts || []).filter(post => post.translation)
     const latest = element('div', 'record-latest')
-    latest.append(element('div', 'message-meta', posts.length ? '最新译文' : '事件摘要'),
+    latest.append(element('div', 'message-meta', posts.length ? i18n.t('最新译文') : i18n.t('事件摘要')),
       element('p', 'message-text', posts.length ? posts[posts.length - 1].translation : record.summary))
     card.append(time, heading, latest)
     if (posts.length > 1) {
       const details = element('details', 'record-messages')
       details.open = expandedRecords.has(record.id)
       const toggle = element('summary', '')
-      toggle.append(element('span', 'when-closed', `展开全部消息（${posts.length} 条）`), element('span', 'when-open', '收起全部消息'))
+      toggle.append(element('span', 'when-closed', i18n.t("展开全部消息（{0} 条）", posts.length)), element('span', 'when-open', i18n.t('收起全部消息')))
       const messages = element('ol', 'message-list')
       for (const post of posts) {
         const row = element('li', '')
-        const postedAt = element('time', '', post.at ? date(post.at) : '发布时间暂不可用')
+        const postedAt = element('time', '', post.at ? date(post.at) : i18n.t('发布时间暂不可用'))
         if (post.at) postedAt.dateTime = post.at
         const meta = element('div', 'message-meta')
-        meta.append(postedAt, element('span', '', ({ announce: '公告', update: '更新', complete: '完成' })[post.role] || ''))
+        meta.append(postedAt, element('span', '', ({ announce: i18n.t('公告'), update: i18n.t('更新'), complete: i18n.t('完成') })[post.role] || ''))
         row.append(meta, element('p', 'message-text', post.translation))
         messages.append(row)
       }
@@ -106,18 +109,18 @@ function renderRecords(state) {
     const bottom = element('div', 'record-bottom')
     bottom.append(element('span', '', record.sources.map(source => source.name).join(' · ')))
     if (record.link) {
-      const link = element('button', 'link', '查看原文 ↗')
+      const link = element('button', 'link', i18n.t('查看原文 ↗'))
       link.addEventListener('click', () => api.open(record.link).catch(() => {}))
       bottom.append(link)
     }
     card.append(bottom)
     container.append(card)
   }
-  if (!state.records.length) container.append(element('p', 'empty', (state.feedLoading ?? state.loading) ? '正在读取最新记录…' : '记录暂不可用，可刷新或打开数据源查看。'))
+  if (!state.records.length) container.append(element('p', 'empty', (state.feedLoading ?? state.loading) ? i18n.t('正在读取最新记录…') : i18n.t('记录暂不可用，可刷新或打开数据源查看。')))
   const failed = state.sources.filter(source => !source.ok)
   document.getElementById('feed-status').textContent = failed.length
-    ? `${failed.map(source => `${source.name}：${source.error || '暂不可用'}`).join('；')}${state.records.length ? `。显示缓存（上次成功更新于 ${date(state.feedUpdatedAt)}）。` : '。'}`
-    : (state.feedUpdatedAt ? `来源：Codex Reset FM · ${updateTime(state.feedUpdatedAt, state.feedLoading ?? state.loading, false)}` : '')
+    ? `${failed.map(source => `${source.name}：${i18n.message(source.error) || i18n.t('暂不可用')}`).join('；')}${state.records.length ? i18n.t("。显示缓存（上次成功更新于 {0}）。", date(state.feedUpdatedAt)) : '。'}`
+    : (state.feedUpdatedAt ? i18n.t("来源：Codex Reset FM · {0}", updateTime(state.feedUpdatedAt, state.feedLoading ?? state.loading, false)) : '')
 }
 const modelTip = element('div', 'model-tip')
 modelTip.id = 'model-description-tip'
@@ -169,8 +172,8 @@ function renderModels(state) {
   const list = document.getElementById('model-list')
   const scrollTop = list.scrollTop
   list.replaceChildren()
-  document.getElementById('model-status').textContent = `${updateTime(data.updatedAt, data.loading, data.error)} · 每${state.refreshMinutes?.models || 10}分钟更新`
-  if (data.error) list.append(element('p', 'empty', data.error))
+  document.getElementById('model-status').textContent = i18n.t("{0} · 每{1}分钟更新", updateTime(data.updatedAt, data.loading, data.error), state.refreshMinutes?.models || 10)
+  if (data.error) list.append(element('p', 'empty', i18n.message(data.error)))
   const values = modelValues(state)
   modelFingerprint = JSON.stringify(values)
   for (const [index, model] of (data.items || []).entries()) {
@@ -204,23 +207,23 @@ function renderModels(state) {
     row.append(rate)
     list.append(row)
   }
-  if (!list.children.length) list.append(element('p', 'empty', data.loading ? '正在读取模型…' : '暂无模型数据，可点击刷新。'))
+  if (!list.children.length) list.append(element('p', 'empty', data.loading ? i18n.t('正在读取模型…') : i18n.t('暂无模型数据，可点击刷新。')))
   list.scrollTop = scrollTop
 }
 function renderWorkBuddy(state) {
   const data = state.workbuddy || {}
   const account = data.account
-  document.getElementById('workbuddy-identity').textContent = account?.identity || '本机 WorkBuddy 账号'
-  document.getElementById('workbuddy-plan').textContent = account?.plan || 'WorkBuddy'
+  document.getElementById('workbuddy-identity').textContent = account?.identity || i18n.t('本机 WorkBuddy 账号')
+  document.getElementById('workbuddy-plan').textContent = i18n.t(account?.plan || 'WorkBuddy')
   const usage = document.getElementById('workbuddy-usage')
   usage.replaceChildren()
   if (account?.status === 'ready') {
-    if (data.error) usage.append(element('p', 'empty', data.error))
+    if (data.error) usage.append(element('p', 'empty', i18n.message(data.error)))
     const balance = element('div', 'credit-balance')
-    balance.append(element('strong', '', account.balance.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })), element('span', 'muted', '总剩余积分'))
+    balance.append(element('strong', '', account.balance.toLocaleString(i18n.language, { minimumFractionDigits: 2, maximumFractionDigits: 2 })), element('span', 'muted', i18n.t('总剩余积分')))
     usage.append(balance)
     const categories = element('div', 'credit-categories')
-    for (const [kind, label] of [['base', '套餐基础积分'], ['reward', '平台奖励积分'], ['purchased', '购买积分'], ['bonus', '套餐赠送积分'], ['other', '其他积分']]) {
+    for (const [kind, label] of [['base', i18n.t('套餐基础积分')], ['reward', i18n.t('平台奖励积分')], ['purchased', i18n.t('购买积分')], ['bonus', i18n.t('套餐赠送积分')], ['other', i18n.t('其他积分')]]) {
       if (['bonus', 'other'].includes(kind) && !account.breakdown?.[kind]) continue
       const item = element('div', 'credit-category')
       item.dataset.kind = kind
@@ -228,7 +231,7 @@ function renderWorkBuddy(state) {
       categories.append(item)
     }
     usage.append(categories)
-  } else usage.append(element('p', 'empty', data.error || (data.loading ? '正在读取积分…' : '积分暂不可用，可手动刷新。')))
+  } else usage.append(element('p', 'empty', i18n.message(data.error) || (data.loading ? i18n.t('正在读取积分…') : i18n.t('积分暂不可用，可手动刷新。'))))
   const historyVisible = state.showWorkBuddyHistory !== false
   document.getElementById('workbuddy-history').hidden = !historyVisible
   if (!historyVisible) {
@@ -263,15 +266,15 @@ function renderWorkBuddy(state) {
     const at = Date.parse(item.expiresAt)
     const row = element('article', 'credit-detail')
     const heading = element('div', 'credit-detail-title')
-    heading.append(element('h3', '', item.name))
+    heading.append(element('h3', '', i18n.t(item.name)))
     const hours = (at - now) / 3600000
-    if (!expired && hours <= 24) heading.append(element('span', 'badge critical', '24小时内到期'))
-    else if (!expired && hours <= 168) heading.append(element('span', 'badge pending', `${Math.ceil(hours / 24)}天内到期`))
-    heading.append(element('span', 'credit-remaining', `剩余 ${credits(item.remaining)}`))
+    if (!expired && hours <= 24) heading.append(element('span', 'badge critical', i18n.t('24小时内到期')))
+    else if (!expired && hours <= 168) heading.append(element('span', 'badge pending', i18n.t("{0}天内到期", Math.ceil(hours / 24))))
+    heading.append(element('span', 'credit-remaining', i18n.t("剩余 {0}", credits(item.remaining))))
     const meta = element('div', 'credit-detail-meta')
-    const expiry = element('time', '', `到期时间 ${date(item.expiresAt)}`)
+    const expiry = element('time', '', i18n.t("到期时间 {0}", date(item.expiresAt)))
     expiry.title = date(item.expiresAt)
-    meta.append(expiry, element('span', '', `已用 ${credits(item.used)}/${credits(item.total)}`))
+    meta.append(expiry, element('span', '', i18n.t("已用 {0}/{1}", credits(item.used), credits(item.total))))
     const track = element('div', 'track credit-track')
     const fill = element('div', 'fill')
     fill.style.width = `${Math.max(0, Math.min(100, item.total > 0 ? item.used / item.total * 100 : 0))}%`
@@ -279,11 +282,11 @@ function renderWorkBuddy(state) {
     row.append(heading, meta, track)
     details.append(row)
   }
-  if (!details.children.length) details.append(element('p', 'empty', (expired ? account?.expiredDetailsError : account?.detailsError) || (data.loading ? '正在读取明细…' : account?.status !== 'ready' ? '查询成功后展示积分明细。' : !Array.isArray(expired ? account.expiredCreditDetails : account.creditDetails) ? '积分明细暂不可用，请刷新后重试。' : '暂无' + (expired ? '已过期' : '有效期内') + '积分。')))
+  if (!details.children.length) details.append(element('p', 'empty', i18n.message(expired ? account?.expiredDetailsError : account?.detailsError) || (data.loading ? i18n.t('正在读取明细…') : account?.status !== 'ready' ? i18n.t('查询成功后展示积分明细。') : !Array.isArray(expired ? account.expiredCreditDetails : account.creditDetails) ? i18n.t('积分明细暂不可用，请刷新后重试。') : i18n.t(expired ? '暂无已过期积分。' : '暂无有效期内积分。'))))
   document.getElementById('credit-pagination').hidden = pageCount <= 1
   document.getElementById('credit-prev').disabled = page <= 1
   document.getElementById('credit-next').disabled = page >= pageCount
-  document.getElementById('credit-page').textContent = `第 ${page} / ${pageCount} 页`
+  document.getElementById('credit-page').textContent = i18n.t("第 {0} / {1} 页", page, pageCount)
   details.scrollTop = detailScrollTop
   document.getElementById('workbuddy-time').title = date(data.updatedAt)
   document.getElementById('workbuddy-time').textContent = updateTime(data.updatedAt, data.loading, data.error)
@@ -327,13 +330,13 @@ function render(state) {
   const refreshParts = []
   if (isWorkBuddy) {
     const detailsVisible = state.showWorkBuddyHistory !== false
-    refreshParts.push(`${detailsVisible ? '积分余额与明细' : '积分余额'}每 ${minutes.workbuddy} 分钟`)
-    if (detailsVisible) refreshParts.push(`模型倍率与优惠每 ${minutes.models || 10} 分钟`)
+    refreshParts.push(i18n.t("{0}每 {1} 分钟", i18n.t(detailsVisible ? '积分余额与明细' : '积分余额'), minutes.workbuddy))
+    if (detailsVisible) refreshParts.push(i18n.t("模型倍率与优惠每 {0} 分钟", minutes.models || 10))
   } else {
-    refreshParts.push(`本机额度每 ${minutes.codex} 分钟`)
-    if (feedVisible) refreshParts.push(`公开额度动态每 ${minutes.feed} 分钟`)
+    refreshParts.push(i18n.t("本机额度每 {0} 分钟", minutes.codex))
+    if (feedVisible) refreshParts.push(i18n.t("公开额度动态每 {0} 分钟", minutes.feed))
   }
-  document.getElementById('refresh-summary').textContent = `自动刷新：${refreshParts.join(' · ')}`
+  document.getElementById('refresh-summary').textContent = i18n.t("自动刷新：{0}", refreshParts.join(' · '))
   document.getElementById('reset-history').hidden = !feedVisible
   const content = document.querySelector('main')
   const scrollTop = content.scrollTop
@@ -341,7 +344,7 @@ function render(state) {
   content.classList.toggle('single-provider', !(enabled.codex && enabled.workbuddy))
   const loading = isWorkBuddy ? creditPeriod === 'models' ? state.models?.loading : state.workbuddy?.loading : state.loading
   refresh.disabled = Boolean(loading)
-  refresh.textContent = loading ? '读取中…' : '刷新'
+  refresh.textContent = loading ? i18n.t('读取中…') : i18n.t('刷新')
   document.getElementById('provider-label').textContent = `METERNEST · ${isWorkBuddy ? 'WORKBUDDY' : 'CODEX'}`
   document.getElementById('codex-content').hidden = isWorkBuddy
   document.getElementById('workbuddy-content').hidden = !isWorkBuddy
@@ -413,8 +416,8 @@ const unsubscribeReset = api.onResetExpanded(() => {
   expandedRecords.clear()
   if (currentState) render(currentState)
 })
-api.read().then(state => { if (selectionRevision === 0) selectedProvider = state.provider || 'codex'; render(state) }).catch(() => { document.getElementById('usage').textContent = '面板暂不可用，请关闭后重试。' })
-refresh.addEventListener('click', () => { const revision = selectionRevision; api.refresh(selectedProvider === 'workbuddy' && creditPeriod === 'models' ? 'models' : selectedProvider).then(state => { if (revision === selectionRevision) render(state) }).catch(() => { refresh.disabled = false; refresh.textContent = '刷新' }) })
+api.read().then(state => { if (selectionRevision === 0) selectedProvider = state.provider || 'codex'; render(state) }).catch(() => { document.getElementById('usage').textContent = i18n.t('面板暂不可用，请关闭后重试。') })
+refresh.addEventListener('click', () => { const revision = selectionRevision; api.refresh(selectedProvider === 'workbuddy' && creditPeriod === 'models' ? 'models' : selectedProvider).then(state => { if (revision === selectionRevision) render(state) }).catch(() => { refresh.disabled = false; refresh.textContent = i18n.t('刷新') }) })
 document.querySelectorAll('[data-url]').forEach(button => button.addEventListener('click', () => api.open(button.dataset.url).catch(() => {})))
 document.addEventListener('click', event => {
   if (event.target === document.documentElement) api.hide().catch(() => {})
@@ -441,3 +444,8 @@ function fitCompactContent() {
   })
 }
 window.addEventListener('beforeunload', () => cancelAnimationFrame(compactFitFrame), { once: true })
+
+window.__TAURI__?.event.listen('meternest-locale', event => {
+  i18n.set(event.payload)
+  if (currentState) render(currentState)
+})
