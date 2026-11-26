@@ -3,14 +3,14 @@ const errorMessage = error => i18n.message(typeof error === 'string' ? error : e
 let requestedPage
 function render(value) {
   i18n.set(value.locale)
-  $('language').value = value.language || 'system'
+  languageSelect.set(value.language)
   $('show-reset-feed').checked = value.showResetFeed !== false
   $('show-workbuddy-history').checked = value.showWorkBuddyHistory !== false
   for (const key of ['codex', 'workbuddy']) $(`source-${key}`).checked = value.enabledProviders[key]
   $('startup').checked = value.openAtLogin
   $('startup').disabled = !value.startupSupported
   $('startup-hint').textContent = value.startupSupported ? i18n.t('下次登录时仅启动菜单栏，首次自动查询延迟 10 秒。') : i18n.t('请先安装正式应用，再开启登录启动。')
-  setMode(value.networkMode)
+  networkSelect.set(value.networkMode)
   $('proxy').value = value.proxyUrl
   $('proxy').disabled = value.networkMode === 'direct'
   $('tray-value').checked = value.showTrayValue
@@ -24,51 +24,72 @@ function render(value) {
   selectTab(settingPages[requestedPage || value.initialPage] ? requestedPage || value.initialPage : 'general')
   fitToAutomationPage()
 }
-const modeOptions = Array.from($('mode-options').querySelectorAll('[role=option]'))
-function setMode(value) {
-  $('mode').value = value
-  $('mode-text').textContent = modeOptions.find(option => option.dataset.value === value).querySelector('span').textContent
-  modeOptions.forEach(option => option.setAttribute('aria-selected', String(option.dataset.value === value)))
-  $('proxy').disabled = value === 'direct'
-}
-function closeModes(restoreFocus = false) {
-  $('mode-options').hidden = true
-  $('mode').setAttribute('aria-expanded', 'false')
-  if (restoreFocus) $('mode').focus()
-}
-function openModes(index = modeOptions.findIndex(option => option.dataset.value === $('mode').value)) {
-  $('mode-options').hidden = false
-  $('mode').setAttribute('aria-expanded', 'true')
-  modeOptions[index].focus()
-}
-$('mode').addEventListener('click', () => {
-  if ($('mode-options').hidden) openModes()
-  else closeModes(true)
-})
-$('mode').addEventListener('change', () => setMode($('mode').value))
-modeOptions.forEach(option => option.addEventListener('click', () => {
-  setMode(option.dataset.value)
-  closeModes(true)
-}))
-$('mode-select').addEventListener('keydown', event => {
-  const index = modeOptions.indexOf(document.activeElement)
-  if (event.key === 'Escape') {
-    if (!$('mode-options').hidden) { event.preventDefault(); event.stopPropagation(); closeModes(true) }
-  } else if (event.key === 'Tab') closeModes()
-  else if (['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) {
-    event.preventDefault()
-    if ($('mode-options').hidden) openModes(event.key === 'Home' ? 0 : event.key === 'End' ? modeOptions.length - 1 : undefined)
-    else openModes(event.key === 'Home' ? 0 : event.key === 'End' ? modeOptions.length - 1 : (index + (event.key === 'ArrowDown' ? 1 : -1) + modeOptions.length) % modeOptions.length)
-  } else if (index >= 0 && (event.key === 'Enter' || event.key === ' ')) {
-    event.preventDefault()
-    modeOptions[index].click()
+function setupDropdown(id, onChange) {
+  const container = $(`${id}-select`)
+  const button = $(id)
+  const label = $(`${id}-text`)
+  const list = $(`${id}-options`)
+  const options = Array.from(list.querySelectorAll('[role=option]'))
+
+  function set(value) {
+    const selected = options.find(option => option.dataset.value === value) || options[0]
+    button.value = selected.dataset.value
+    label.textContent = selected.firstElementChild.textContent
+    for (const option of options) option.setAttribute('aria-selected', String(option === selected))
   }
-})
-document.addEventListener('pointerdown', event => {
-  if (!$('mode-select').contains(event.target)) closeModes()
-})
-$('mode-select').addEventListener('focusout', event => {
-  if (!$('mode-select').contains(event.relatedTarget)) closeModes()
+  function close(restoreFocus = false) {
+    list.hidden = true
+    button.setAttribute('aria-expanded', 'false')
+    if (restoreFocus) button.focus()
+  }
+  function open(index = options.findIndex(option => option.dataset.value === button.value)) {
+    list.hidden = false
+    button.setAttribute('aria-expanded', 'true')
+    options[index].focus()
+  }
+
+  button.addEventListener('click', () => {
+    if (list.hidden) open()
+    else close(true)
+  })
+  for (const option of options) option.addEventListener('click', () => {
+    const changed = button.value !== option.dataset.value
+    set(option.dataset.value)
+    close(true)
+    if (changed) onChange(button.value)
+  })
+  container.addEventListener('keydown', event => {
+    const index = options.indexOf(document.activeElement)
+    if (event.key === 'Escape' && !list.hidden) {
+      event.preventDefault()
+      event.stopPropagation()
+      close(true)
+    } else if (event.key === 'Tab' && !list.hidden) {
+      close(true)
+    } else if (['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) {
+      event.preventDefault()
+      const step = event.key === 'ArrowDown' ? 1 : -1
+      const next = event.key === 'Home' ? 0 : event.key === 'End' ? options.length - 1
+        : list.hidden ? undefined : (index + step + options.length) % options.length
+      open(next)
+    } else if (index >= 0 && (event.key === 'Enter' || event.key === ' ')) {
+      event.preventDefault()
+      options[index].click()
+    }
+  })
+  document.addEventListener('pointerdown', event => {
+    if (!container.contains(event.target)) close()
+  })
+  container.addEventListener('focusout', event => {
+    if (!container.contains(event.relatedTarget)) close()
+  })
+  return { set, close }
+}
+
+const languageSelect = setupDropdown('language', markDirty)
+const networkSelect = setupDropdown('mode', value => {
+  $('proxy').disabled = value === 'direct'
+  markDirty()
 })
 function sourceChoices() { return { codex: $('source-codex').checked, workbuddy: $('source-workbuddy').checked } }
 function syncSourceControls() {
@@ -131,7 +152,8 @@ let savedSources = { codex: true, workbuddy: true }, actionState = {}
 function selectTab(name) {
   if (!Object.hasOwn(settingPages, name)) return
   requestedPage = name
-  closeModes()
+  languageSelect.close()
+  networkSelect.close()
   for (const key of pageKeys) {
     const active = key === name
     $(`tab-${key}`).setAttribute('aria-selected', String(active))
@@ -314,5 +336,4 @@ const settingsLayout = new ResizeObserver(() => {
 })
 settingsLayout.observe(settingsSections)
 for (const page of settingsSections.querySelectorAll('[role=tabpanel]')) settingsLayout.observe(page)
-settingsLayout.observe($('mode-options'))
 window.addEventListener('beforeunload', () => settingsLayout.disconnect(), { once: true })
