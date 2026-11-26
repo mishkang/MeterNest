@@ -3,6 +3,7 @@ use crate::macos;
 use tauri::{Emitter, Manager, WebviewUrl, WebviewWindowBuilder};
 
 const PANEL_WIDTH: f64 = 360.0;
+pub const PANEL_HEIGHT: f64 = 530.0;
 // Transparent space for the CSS shadow. Keep in sync with panel.css.
 const PANEL_SHADOW_SIDE: f64 = 24.0;
 const PANEL_SHADOW_BOTTOM: f64 = 32.0;
@@ -44,7 +45,7 @@ pub fn ensure_panel_window(core: &mut Core) -> bool {
         .title(crate::i18n::text(crate::i18n::resolve(&core.prefs()), "额度速览"))
         .initialization_script(crate::i18n::initialization_script(core))
         .initialization_script("document.addEventListener('contextmenu', event => event.preventDefault(), true)")
-        .inner_size(PANEL_WIDTH + 2.0 * PANEL_SHADOW_SIDE, 744.0 + PANEL_SHADOW_BOTTOM)
+        .inner_size(PANEL_WIDTH + 2.0 * PANEL_SHADOW_SIDE, PANEL_HEIGHT + PANEL_SHADOW_BOTTOM)
         .decorations(false)
         .resizable(false)
         .maximizable(false)

@@ -8,7 +8,7 @@
   <link rel="stylesheet" href="panel.css">
 </head>
 <body>
-  <header><div><span class="eyebrow" id="provider-label">METERNEST · CODEX</span><h1>额度速览<span class="live-dot"></span></h1></div><button id="refresh" title="刷新数据">刷新</button></header>
+  <header id="overview-header"><h1>额度速览<span class="live-dot"></span></h1><button id="refresh" title="刷新数据">刷新</button></header>
   <nav class="provider-tabs" role="tablist" aria-label="额度来源">
     <button id="tab-codex" role="tab" aria-selected="true" aria-controls="codex-content" data-provider="codex">Codex</button>
     <button id="tab-workbuddy" role="tab" aria-selected="false" aria-controls="workbuddy-content" tabindex="-1" data-provider="workbuddy">WorkBuddy</button>
@@ -21,7 +21,7 @@
       <div class="account-foot"><p id="usage-time" class="footnote"></p><span id="reset-credits" class="footnote"></span></div>
     </section>
     <section id="reset-history" class="history" aria-labelledby="history-title">
-      <div class="section-heading"><h2 id="history-title">最近额度动态</h2></div>
+      <div class="section-heading"><h2 id="history-title" tabindex="-1">最近额度动态</h2><button class="link" data-url="https://codex-reset.pro/">查看全部 ↗</button></div>
       <div id="records" aria-live="polite"><p class="empty">正在读取记录…</p></div>
       <p id="feed-status" class="footnote"></p>
     </section>
@@ -46,11 +46,19 @@
 
     </div>
   </main>
-  <footer>
-    <div id="codex-source"><button class="link" data-url="https://codex-reset.pro/">打开 Codex Reset FM ↗</button></div>
-    <p id="refresh-summary"></p>
-    <p>额度查询为只读；预热与签到可在设置中管理。</p>
-  </footer>
+  <footer id="overview-footer"><p id="refresh-summary"></p></footer>
+  <section id="record-detail" aria-labelledby="record-detail-title" hidden>
+    <div class="detail-navigation">
+      <button type="button" class="link" id="record-back">‹ 返回列表</button>
+      <button type="button" class="link" id="record-original">查看原文 ↗</button>
+    </div>
+    <div class="section-heading">
+      <h2 id="record-detail-title"></h2>
+      <span id="record-detail-stage" class="badge"></span>
+    </div>
+    <p id="record-detail-info" class="footnote"></p>
+    <ol id="record-messages" tabindex="0" aria-label="动态消息"></ol>
+  </section>
   <script src="../i18n.js"></script><script src="bridge-panel.js"></script>
   <script src="workbuddy-models.js"></script>
   <script src="panel.js"></script>

@@ -3,7 +3,8 @@ const refresh = document.getElementById('refresh')
 let currentState
 let selectedProvider = 'codex'
 let creditPeriod = 'valid'
-const CREDIT_PAGE_SIZE = 5
+const CREDIT_PAGE_SIZE = 3
+const PANEL_HEIGHT = 530
 const creditPages = { valid: 1, expired: 1 }
 let selectionRevision = 0
 const formatDate = (value, compact) => value ? new Intl.DateTimeFormat(i18n.language, {
@@ -21,9 +22,9 @@ function element(tag, className, text) {
 }
 function duration(minutes) {
   if (!minutes) return i18n.t('额度窗口')
-  if (minutes % 10080 === 0) return i18n.t("{0} 周额度", minutes / 10080)
+  if (minutes % 10080 === 0) return i18n.t("{0}周额度", minutes / 10080)
   if (minutes % 1440 === 0) return i18n.t("{0} 天额度", minutes / 1440)
-  if (minutes % 60 === 0) return i18n.t("{0} 小时额度", minutes / 60)
+  if (minutes % 60 === 0) return i18n.t("{0}小时额度", minutes / 60)
   return i18n.t("{0} 分钟额度", minutes)
 }
 function remaining(at) {
@@ -65,63 +66,141 @@ function renderUsage(state) {
   document.getElementById('usage-time').title = date(state.updatedAt)
   document.getElementById('usage-time').textContent = updateTime(state.updatedAt, state.accountLoading ?? state.loading, state.accountError)
 }
-const expandedRecords = new Set()
+const recordDetail = document.getElementById('record-detail')
+const recordMessages = document.getElementById('record-messages')
+const recordBack = document.getElementById('record-back')
+const recordOriginal = document.getElementById('record-original')
+const overview = document.querySelector('main')
+const codexContent = document.getElementById('codex-content')
+const workbuddyContent = document.getElementById('workbuddy-content')
+let activeRecordId = null
+let overviewScrollTop = 0
+
+function recordPosts(record) {
+  const posts = (record.posts || []).filter(post => post.translation || post.url)
+  if (posts.length) {
+    if (record.summary && !posts.some(post => post.translation)) {
+      posts[0] = { ...posts[0], translation: record.summary }
+    }
+    return posts
+  }
+  if (!record.summary) return []
+  const complete = record.stage === 'completed'
+  return [{
+    translation: record.summary,
+    at: complete ? record.completedAt : record.announcedAt,
+    role: complete ? 'complete' : 'announce'
+  }]
+}
+
+function latestRecordTime(record, posts) {
+  return posts.findLast(post => post.at)?.at || record.updatedAt || record.completedAt || record.announcedAt
+}
+
+function recordStage(record) {
+  return i18n.t(record.stage === 'completed' ? '已完成' : '待确认')
+}
+
+function recordStageClass(record) {
+  return record.stage === 'completed' ? 'badge done' : 'badge pending'
+}
+
+function recordInfo(record, posts) {
+  const time = latestRecordTime(record, posts)
+  const count = posts.length === 1 ? i18n.t('1 条消息') : i18n.t('{0} 条消息', posts.length)
+  return time ? `${compactDate(time)} · ${count}` : count
+}
+
 function renderRecords(state) {
-  for (const id of expandedRecords) if (!state.records.some(record => record.id === id)) expandedRecords.delete(id)
   const container = document.getElementById('records')
+  const focusedId = document.activeElement?.dataset.recordId
   container.replaceChildren()
-  for (const record of state.records) {
-    const card = element('article', 'record')
-    const complete = record.stage === 'completed'
-    const displayAt = complete ? record.completedAt : record.announcedAt
-    const time = element('time', '', `${complete ? i18n.t('完成时间') : i18n.t('公告时间')}：${date(displayAt)}`)
-    if (displayAt) time.dateTime = displayAt
-    const heading = element('div', 'record-title')
-    heading.append(element('h3', '', record.title), element('span', `badge ${complete ? 'done' : 'pending'}`, complete ? i18n.t('已完成') : i18n.t('待确认')))
-    const posts = (record.posts || []).filter(post => post.translation)
-    const latest = element('div', 'record-latest')
-    latest.append(element('div', 'message-meta', posts.length ? i18n.t('最新译文') : i18n.t('事件摘要')),
-      element('p', 'message-text', posts.length ? posts[posts.length - 1].translation : record.summary))
-    card.append(time, heading, latest)
-    if (posts.length > 1) {
-      const details = element('details', 'record-messages')
-      details.open = expandedRecords.has(record.id)
-      const toggle = element('summary', '')
-      toggle.append(element('span', 'when-closed', i18n.t("展开全部消息（{0} 条）", posts.length)), element('span', 'when-open', i18n.t('收起全部消息')))
-      const messages = element('ol', 'message-list')
-      for (const post of posts) {
-        const row = element('li', '')
-        const postedAt = element('time', '', post.at ? date(post.at) : i18n.t('发布时间暂不可用'))
-        if (post.at) postedAt.dateTime = post.at
-        const meta = element('div', 'message-meta')
-        meta.append(postedAt, element('span', '', ({ announce: i18n.t('公告'), update: i18n.t('更新'), complete: i18n.t('完成') })[post.role] || ''))
-        row.append(meta, element('p', 'message-text', post.translation))
-        messages.append(row)
-      }
-      details.append(toggle, messages)
-      details.addEventListener('toggle', () => {
-        if (!details.isConnected) return
-        if (details.open) expandedRecords.add(record.id)
-        else expandedRecords.delete(record.id)
-      })
-      card.append(details)
-    }
-    const bottom = element('div', 'record-bottom')
-    bottom.append(element('span', '', record.sources.map(source => source.name).join(' · ')))
-    if (record.link) {
-      const link = element('button', 'link', i18n.t('查看原文 ↗'))
-      link.addEventListener('click', () => api.open(record.link).catch(() => {}))
-      bottom.append(link)
-    }
-    card.append(bottom)
-    container.append(card)
+  for (const record of state.records.slice(0, 3)) {
+    const posts = recordPosts(record)
+    const row = element('button', 'record')
+    row.type = 'button'
+    row.dataset.recordId = record.id
+    row.setAttribute('aria-controls', 'record-detail')
+    const heading = element('span', 'record-title')
+    heading.append(element('strong', '', record.title), element('span', recordStageClass(record), recordStage(record)))
+    const copy = element('span', 'record-copy')
+    copy.append(heading, element('span', 'record-meta', recordInfo(record, posts)))
+    const summary = posts.findLast(post => post.translation)?.translation || record.summary
+    if (summary) copy.append(element('span', 'record-summary', summary))
+    const arrow = element('span', 'record-chevron', '›')
+    arrow.setAttribute('aria-hidden', 'true')
+    row.append(copy, arrow)
+    row.addEventListener('click', () => {
+      overviewScrollTop = overview.scrollTop
+      activeRecordId = record.id
+      renderRecordDetail(record)
+      showRecordDetail(true)
+      recordMessages.scrollTop = 0
+      recordBack.focus({ preventScroll: true })
+    })
+    container.append(row)
+    if (focusedId === record.id) row.focus({ preventScroll: true })
   }
   if (!state.records.length) container.append(element('p', 'empty', (state.feedLoading ?? state.loading) ? i18n.t('正在读取最新记录…') : i18n.t('记录暂不可用，可刷新或打开数据源查看。')))
   const failed = state.sources.filter(source => !source.ok)
   document.getElementById('feed-status').textContent = failed.length
-    ? `${failed.map(source => `${source.name}：${i18n.message(source.error) || i18n.t('暂不可用')}`).join('；')}${state.records.length ? i18n.t("。显示缓存（上次成功更新于 {0}）。", date(state.feedUpdatedAt)) : '。'}`
-    : (state.feedUpdatedAt ? i18n.t("来源：Codex Reset FM · {0}", updateTime(state.feedUpdatedAt, state.feedLoading ?? state.loading, false)) : '')
+    ? `${failed.map(source => `${source.name}：${i18n.message(source.error) || i18n.t('暂不可用')}`).join('；')}${state.records.length ? i18n.t('。显示缓存（上次成功更新于 {0}）。', date(state.feedUpdatedAt)) : ''}`
+    : ''
 }
+
+function renderRecordDetail(record) {
+  const posts = recordPosts(record)
+  const title = document.getElementById('record-detail-title')
+  title.textContent = record.title
+  const stage = document.getElementById('record-detail-stage')
+  stage.className = recordStageClass(record)
+  stage.textContent = recordStage(record)
+  document.getElementById('record-detail-info').textContent = recordInfo(record, posts)
+  recordOriginal.hidden = !record.link
+  recordOriginal.dataset.url = record.link || ''
+  const scrollTop = recordMessages.scrollTop
+  recordMessages.replaceChildren()
+  const roles = { announce: '公告', update: '进展', complete: '完成' }
+  for (const post of posts) {
+    const row = element('li', 'record-message')
+    const meta = element('div', 'message-meta')
+    const time = element('time', '', post.at ? compactDate(post.at) : i18n.t('发布时间暂不可用'))
+    if (post.at) time.dateTime = post.at
+    meta.append(element('strong', '', i18n.t(roles[post.role] || '消息')), time)
+    row.append(meta)
+    if (post.translation) row.append(element('p', 'message-text', post.translation))
+    if (post.url) {
+      const original = element('button', 'link', i18n.t('查看原文 ↗'))
+      original.type = 'button'
+      original.addEventListener('click', () => api.open(post.url).catch(() => {}))
+      row.append(original)
+    }
+    recordMessages.append(row)
+  }
+  if (!posts.length) recordMessages.append(element('li', 'empty', i18n.t('暂无消息正文。')))
+  recordMessages.scrollTop = scrollTop
+}
+
+function showRecordDetail(show) {
+  recordDetail.hidden = !show
+  document.getElementById('overview-header').hidden = show
+  overview.hidden = show
+  document.getElementById('overview-footer').hidden = show
+  document.querySelector('.provider-tabs').hidden = show || document.body.classList.contains('single-provider')
+}
+
+recordBack.addEventListener('click', () => {
+  const previousId = activeRecordId
+  const scrollTop = overviewScrollTop
+  activeRecordId = null
+  showRecordDetail(false)
+  const trigger = Array.from(document.querySelectorAll('[data-record-id]')).find(row => row.dataset.recordId === previousId)
+  overview.scrollTop = scrollTop
+  const focusTarget = trigger || document.getElementById('history-title')
+  focusTarget.focus({ preventScroll: true })
+  fitOverview()
+})
+
 const modelTip = element('div', 'model-tip')
 modelTip.id = 'model-description-tip'
 modelTip.setAttribute('role', 'tooltip')
@@ -283,36 +362,13 @@ function renderWorkBuddy(state) {
     details.append(row)
   }
   if (!details.children.length) details.append(element('p', 'empty', i18n.message(expired ? account?.expiredDetailsError : account?.detailsError) || (data.loading ? i18n.t('正在读取明细…') : account?.status !== 'ready' ? i18n.t('查询成功后展示积分明细。') : !Array.isArray(expired ? account.expiredCreditDetails : account.creditDetails) ? i18n.t('积分明细暂不可用，请刷新后重试。') : i18n.t(expired ? '暂无已过期积分。' : '暂无有效期内积分。'))))
-  document.getElementById('credit-pagination').hidden = pageCount <= 1
+  document.getElementById('credit-pagination').hidden = false
   document.getElementById('credit-prev').disabled = page <= 1
   document.getElementById('credit-next').disabled = page >= pageCount
   document.getElementById('credit-page').textContent = i18n.t("第 {0} / {1} 页", page, pageCount)
   details.scrollTop = detailScrollTop
   document.getElementById('workbuddy-time').title = date(data.updatedAt)
   document.getElementById('workbuddy-time').textContent = updateTime(data.updatedAt, data.loading, data.error)
-}
-// Keep both provider cards at the same height so switching tabs never shifts
-// the credit/history sections. Measure natural heights with both panels
-// visible, then apply the taller one to both (never clipping either card).
-function syncAccountCardHeights() {
-  const codexPanel = document.getElementById('codex-content')
-  const workbuddyPanel = document.getElementById('workbuddy-content')
-  const codexCard = codexPanel.querySelector('.account-card')
-  const workbuddyCard = workbuddyPanel.querySelector('.account-card')
-  const codexHidden = codexPanel.hidden
-  const workbuddyHidden = workbuddyPanel.hidden
-  codexCard.style.height = ''
-  workbuddyCard.style.height = ''
-  if (currentState?.enabledProviders && !(currentState.enabledProviders.codex && currentState.enabledProviders.workbuddy)) return
-  codexPanel.hidden = false
-  workbuddyPanel.hidden = false
-  const height = Math.ceil(Math.max(codexCard.offsetHeight, workbuddyCard.offsetHeight))
-  codexPanel.hidden = codexHidden
-  workbuddyPanel.hidden = workbuddyHidden
-  if (height > 0) {
-    codexCard.style.height = `${height}px`
-    workbuddyCard.style.height = `${height}px`
-  }
 }
 function render(state) {
   hideModelTip()
@@ -323,7 +379,7 @@ function render(state) {
     selectedProvider = enabled[state.provider] ? state.provider : enabled.codex ? 'codex' : 'workbuddy'
     selectionRevision++
   }
-  document.querySelector('.provider-tabs').hidden = !(enabled.codex && enabled.workbuddy)
+  document.body.classList.toggle('single-provider', !(enabled.codex && enabled.workbuddy))
   const minutes = state.refreshMinutes || { codex: 1, workbuddy: 5, feed: 10 }
   const feedVisible = enabled.codex && state.showResetFeed !== false
   const isWorkBuddy = selectedProvider === 'workbuddy'
@@ -338,17 +394,14 @@ function render(state) {
   }
   document.getElementById('refresh-summary').textContent = i18n.t("自动刷新：{0}", refreshParts.join(' · '))
   document.getElementById('reset-history').hidden = !feedVisible
-  const content = document.querySelector('main')
-  const scrollTop = content.scrollTop
-  content.classList.toggle('workbuddy-view', isWorkBuddy)
-  content.classList.toggle('single-provider', !(enabled.codex && enabled.workbuddy))
+  const scrollTop = overview.scrollTop
+  overview.classList.toggle('workbuddy-view', isWorkBuddy)
   const loading = isWorkBuddy ? creditPeriod === 'models' ? state.models?.loading : state.workbuddy?.loading : state.loading
   refresh.disabled = Boolean(loading)
   refresh.textContent = loading ? i18n.t('读取中…') : i18n.t('刷新')
-  document.getElementById('provider-label').textContent = `METERNEST · ${isWorkBuddy ? 'WORKBUDDY' : 'CODEX'}`
-  document.getElementById('codex-content').hidden = isWorkBuddy
-  document.getElementById('workbuddy-content').hidden = !isWorkBuddy
-  document.getElementById('codex-source').hidden = isWorkBuddy || !feedVisible
+  codexContent.hidden = isWorkBuddy
+  workbuddyContent.hidden = !isWorkBuddy
+  workbuddyContent.classList.toggle('credit-list-view', creditPeriod !== 'models' || state.showWorkBuddyHistory === false)
   document.querySelectorAll('[data-provider]').forEach(tab => {
     tab.hidden = !enabled[tab.dataset.provider]
     const active = !tab.hidden && tab.dataset.provider === selectedProvider
@@ -357,22 +410,24 @@ function render(state) {
   })
   renderUsage(state)
   if (feedVisible) renderRecords(state)
-  else { expandedRecords.clear(); document.getElementById('records').replaceChildren(); document.getElementById('feed-status').textContent = '' }
+  else document.getElementById('records').replaceChildren()
   renderWorkBuddy(state)
-  syncAccountCardHeights()
-  content.scrollTop = scrollTop
+  const detail = !isWorkBuddy && feedVisible && state.records.find(record => record.id === activeRecordId)
+  if (!detail) activeRecordId = null
+  showRecordDetail(Boolean(detail))
+  if (detail) renderRecordDetail(detail)
+  else overview.scrollTop = scrollTop
   const compact = isWorkBuddy ? state.showWorkBuddyHistory === false : !feedVisible
   document.body.classList.toggle('compact-view', compact)
-  fitCompactContent()
+  fitOverview()
 }
 function resetProviderView() {
-  const content = document.querySelector('main')
-  expandedRecords.clear()
+  activeRecordId = null
   creditPages.valid = 1
   creditPages.expired = 1
   document.getElementById('workbuddy-details').scrollTop = 0
   document.getElementById('model-list').scrollTop = 0
-  content.scrollTop = 0
+  overview.scrollTop = 0
   creditPeriod = 'valid'
 }
 function selectProvider(provider) {
@@ -380,11 +435,10 @@ function selectProvider(provider) {
   if (provider === selectedProvider) return
   if (provider === 'workbuddy') creditPeriod = 'valid'
   resetProviderView()
-  const content = document.querySelector('main')
   selectedProvider = provider
   const revision = ++selectionRevision
   if (currentState) render(currentState)
-  content.scrollTop = 0
+  overview.scrollTop = 0
   api.select(provider).then(state => { if (revision === selectionRevision) render(state) }).catch(() => {})
 }
 document.querySelectorAll('[data-provider]').forEach(tab => {
@@ -408,12 +462,14 @@ document.querySelectorAll('[data-credit-period]').forEach(button => button.addEv
 document.querySelectorAll('[data-credit-page]').forEach(button => button.addEventListener('click', () => {
   document.getElementById('workbuddy-details').scrollTop = 0
   creditPages[creditPeriod] = Math.max(1, creditPages[creditPeriod] + Number(button.dataset.creditPage))
-  if (currentState) renderWorkBuddy(currentState)
+  if (currentState) {
+    renderWorkBuddy(currentState)
+  }
 }))
 const unsubscribe = api.onUpdated(render)
-// Opening the W popup always collapses previously expanded Codex messages.
+// Reopening the popup returns to the overview.
 const unsubscribeReset = api.onResetExpanded(() => {
-  expandedRecords.clear()
+  activeRecordId = null
   if (currentState) render(currentState)
 })
 api.read().then(state => { if (selectionRevision === 0) selectedProvider = state.provider || 'codex'; render(state) }).catch(() => { document.getElementById('usage').textContent = i18n.t('面板暂不可用，请关闭后重试。') })
@@ -428,22 +484,54 @@ const modelClock = setInterval(() => {
 }, 1000)
 window.addEventListener('beforeunload', () => { clearInterval(modelClock); unsubscribe(); unsubscribeReset() })
 
-let compactFitFrame
-function fitCompactContent() {
-  cancelAnimationFrame(compactFitFrame)
+function withVisibleProviders(callback) {
+  const codexHidden = codexContent.hidden
+  const workbuddyHidden = workbuddyContent.hidden
+  codexContent.hidden = false
+  workbuddyContent.hidden = false
+  try {
+    return callback()
+  } finally {
+    codexContent.hidden = codexHidden
+    workbuddyContent.hidden = workbuddyHidden
+  }
+}
+
+let fitFrame
+function fitOverview() {
+  cancelAnimationFrame(fitFrame)
+  if (overview.hidden) return
+  const enabled = currentState.enabledProviders || { codex: true, workbuddy: true }
+  const codexCard = codexContent.querySelector('.account-card')
+  const workbuddyCard = workbuddyContent.querySelector('.account-card')
+  const codexFoot = codexCard.querySelector('.account-foot')
+  const workbuddyFoot = document.getElementById('workbuddy-time')
+  for (const element of [codexCard, workbuddyCard, codexFoot, workbuddyFoot]) element.style.minHeight = ''
+  if (enabled.codex && enabled.workbuddy) {
+    withVisibleProviders(() => {
+      const height = (first, second) => Math.ceil(Math.max(
+        first.getBoundingClientRect().height,
+        second.getBoundingClientRect().height
+      ))
+      const footerHeight = height(codexFoot, workbuddyFoot)
+      codexFoot.style.minHeight = workbuddyFoot.style.minHeight = `${footerHeight}px`
+      const cardHeight = height(codexCard, workbuddyCard)
+      codexCard.style.minHeight = workbuddyCard.style.minHeight = `${cardHeight}px`
+    })
+  }
+
   if (!document.body.classList.contains('compact-view')) return
-  compactFitFrame = requestAnimationFrame(() => {
-    if (!document.body.classList.contains('compact-view')) return
-    const id = selectedProvider === 'workbuddy' ? 'workbuddy-content' : 'codex-content'
-    const card = document.querySelector(`#${id} > .account-card`)
-    const cardBottom = card.getBoundingClientRect().bottom - document.body.getBoundingClientRect().top
-    const footer = document.querySelector('footer')
-    const footerGap = Number.parseFloat(getComputedStyle(footer).marginTop)
-    const height = Math.ceil(cardBottom + footerGap + footer.getBoundingClientRect().height)
-    api.fit(Math.max(240, Math.min(744, height))).catch(() => {})
+  fitFrame = requestAnimationFrame(() => {
+    if (overview.hidden) return
+    const footer = document.getElementById('overview-footer')
+    const chromeHeight = overview.getBoundingClientRect().top - document.body.getBoundingClientRect().top
+      + Number.parseFloat(getComputedStyle(footer).marginTop) + footer.getBoundingClientRect().height
+    const activeCard = selectedProvider === 'codex' ? codexCard : workbuddyCard
+    const height = Math.ceil(activeCard.offsetHeight + chromeHeight)
+    api.fit(selectedProvider, Math.max(240, Math.min(PANEL_HEIGHT, height))).catch(() => {})
   })
 }
-window.addEventListener('beforeunload', () => cancelAnimationFrame(compactFitFrame), { once: true })
+window.addEventListener('beforeunload', () => cancelAnimationFrame(fitFrame), { once: true })
 
 window.__TAURI__?.event.listen('meternest-locale', event => {
   i18n.set(event.payload)

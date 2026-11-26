@@ -53,10 +53,10 @@ pub fn codex_monitor_refresh(provider: String, window: tauri::WebviewWindow, sta
 }
 
 #[tauri::command(async)]
-pub fn codex_monitor_fit(height: f64, window: tauri::WebviewWindow, state: State<CoreHandle>) -> Result<bool, AppError> {
+pub fn codex_monitor_fit(provider: String, height: f64, window: tauri::WebviewWindow, state: State<CoreHandle>) -> Result<bool, AppError> {
     let window_label = window.label().to_string();
     call(state, &window_label, &["panel"], move |core, tx| {
-        let _ = tx.send(monitor::fit_panel_height(core, height).map(|value| json!(value)));
+        let _ = tx.send(monitor::fit_panel_height(core, &provider, height).map(|value| json!(value)));
     })
     .map(|_| true)
 }
@@ -75,7 +75,7 @@ pub fn codex_monitor_hide(window: tauri::WebviewWindow, state: State<CoreHandle>
 pub fn codex_monitor_open(url: String, window: tauri::WebviewWindow, state: State<CoreHandle>) -> Result<bool, AppError> {
     let window_label = window.label().to_string();
     call(state, &window_label, &["panel"], move |core, tx| {
-        // Only feed home pages and record links may ever be opened.
+        // Only feed home pages and normalized record or message links may be opened.
         let feed_enabled = {
             let prefs = core.prefs();
             prefs.get("showResetFeed").and_then(Value::as_bool).unwrap_or(true)
@@ -91,6 +91,9 @@ pub fn codex_monitor_open(url: String, window: tauri::WebviewWindow, state: Stat
                     if !link.is_empty() {
                         allowed.push(link.to_string());
                     }
+                }
+                if let Some(posts) = record.get("posts").and_then(Value::as_array) {
+                    allowed.extend(posts.iter().filter_map(|post| post["url"].as_str()).map(str::to_owned));
                 }
             }
         }

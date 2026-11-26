@@ -9,7 +9,7 @@
     return () => { try { unlisten && unlisten() } catch {} }
   }
   window.codexMonitor = {
-    fit: height => invoke('codex_monitor_fit', { height }),
+    fit: (provider, height) => invoke('codex_monitor_fit', { provider, height }),
     read: () => invoke('codex_monitor_read'),
     select: provider => invoke('codex_monitor_select', { provider }),
     refresh: provider => invoke('codex_monitor_refresh', { provider }),

@@ -6,13 +6,23 @@ MeterNest 是一款 macOS 菜单栏应用，用来查看本机 Codex 账号的�
 
 ## 界面预览
 
-预览中的账号、额度、积分、公开动态和任务记录均为测试数据。
+截图通过当前界面渲染。账号、额度、积分、公开动态和任务记录均为测试数据。
 
-| Codex 额度速览 | WorkBuddy 积分速览 |
+### 菜单栏速览
+
+| Codex 额度速览 | 动态详情 | WorkBuddy 积分速览 |
+| --- | --- | --- |
+| <img src="docs/previews/codex.png" width="270" alt="Codex 演示账号的5小时额度、周额度和最近三条动态"> | <img src="docs/previews/codex-detail.png" width="270" alt="一条动态中的三条模拟消息"> | <img src="docs/previews/workbuddy.png" width="270" alt="WorkBuddy 演示账号的积分余额和三条有效积分明细"> |
+
+### 设置窗口
+
+| 显示与启动 | 刷新与网络 |
 | --- | --- |
-| <img src="docs/previews/codex.png" width="360" alt="Codex 演示账号的 5 小时和每周额度，以及模拟额度动态"> | <img src="docs/previews/workbuddy.png" width="360" alt="WorkBuddy 演示账号的积分余额和有效期内积分明细"> |
+| <a href="docs/previews/display-startup.png"><img src="docs/previews/display-startup.png" width="350" alt="显示来源、菜单栏、登录启动和界面语言设置"></a> | <a href="docs/previews/refresh-network.png"><img src="docs/previews/refresh-network.png" width="350" alt="刷新间隔及代理设置"></a> |
 
-<img src="docs/previews/automation.png" width="700" alt="自动任务设置，展示 Codex 预热、WorkBuddy 签到和各自的通知开关">
+| 自动任务 | 关于 |
+| --- | --- |
+| <a href="docs/previews/automation.png"><img src="docs/previews/automation.png" width="350" alt="Codex 预热、WorkBuddy 签到及系统通知设置"></a> | <a href="docs/previews/about.png"><img src="docs/previews/about.png" width="350" alt="MeterNest 关于页面与版本信息"></a> |
 
 ## 安装与使用
 

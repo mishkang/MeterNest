@@ -140,9 +140,9 @@
   "操作未完成，请检查来源设置与登录状态后重试。": ["Check source settings and sign-in, then try again.", "Vérifiez les réglages de la source et la connexion, puis réessayez.", "情報の設定とログイン状態を確認して再試行してください。", "소스 설정과 로그인 상태를 확인한 뒤 다시 시도하세요.", "操作未完成，請檢查來源設定與登入狀態後重試。"],
   "暂不可用": ["Unavailable", "Indisponible", "利用不可", "사용할 수 없음", "暫不可用"],
   "额度窗口": ["Quota window", "Période de quota", "利用枠", "한도 기간", "額度窗口"],
-  "{0} 周额度": ["{0}-week limit", "Quota sur {0} sem.", "{0}週間の利用枠", "{0}주 한도", "{0} 周額度"],
+  "{0}周额度": ["{0}-week limit", "Quota sur {0} sem.", "{0}週間の利用枠", "{0}주 한도", "{0}周額度"],
   "{0} 天额度": ["{0}-day limit", "Quota sur {0} j", "{0}日間の利用枠", "{0}일 한도", "{0} 天額度"],
-  "{0} 小时额度": ["{0}-hour limit", "Quota sur {0} h", "{0}時間の利用枠", "{0}시간 한도", "{0} 小時額度"],
+  "{0}小时额度": ["{0}-hour limit", "Quota sur {0} h", "{0}時間の利用枠", "{0}시간 한도", "{0}小時額度"],
   "{0} 分钟额度": ["{0}-minute limit", "Quota sur {0} min", "{0}分間の利用枠", "{0}분 한도", "{0} 分鐘額度"],
   " · 已到恢复时间，刷新确认": [" · Refresh to confirm reset", " · Actualisez pour confirmer", " · 更新してリセットを確認", " · 새로 고침하여 초기화 확인", " · 已到恢復時間，重新整理確認"],
   " · 约 {0} 天 {1} 小时后": [" · in ~{0}d {1}h", " · dans ~{0} j {1} h", " · 約{0}日{1}時間後", " · 약 {0}일 {1}시간 후", " · 約 {0} 天 {1} 小時後"],
@@ -333,5 +333,13 @@
   "WorkBuddy 积分明细暂不可用": ["WorkBuddy credit details are unavailable.", "Détails des crédits WorkBuddy indisponibles.", "WorkBuddyのクレジット明細を取得できません。", "WorkBuddy 크레딧 상세 내역을 사용할 수 없습니다.", "WorkBuddy 積分明細暫不可用"],
   "WorkBuddy 积分明细分页重复": ["WorkBuddy returned a duplicate credit details page.", "WorkBuddy a renvoyé une page de détails en double.", "WorkBuddyから同じ明細ページが返されました。", "WorkBuddy가 중복된 크레딧 내역 페이지를 반환했습니다.", "WorkBuddy 積分明細分頁重復"],
   "WorkBuddy 积分明细分页不完整": ["WorkBuddy returned incomplete credit details.", "WorkBuddy a renvoyé des détails incomplets.", "WorkBuddyのクレジット明細に不足があります。", "WorkBuddy 크레딧 상세 내역이 불완전합니다.", "WorkBuddy 積分明細分頁不完整"],
-  "WorkBuddy 积分明细日期无效": ["A WorkBuddy credit detail date is invalid.", "Une date de détail WorkBuddy est invalide.", "WorkBuddyのクレジット明細の日付が無効です。", "WorkBuddy 크레딧 상세 내역의 날짜가 올바르지 않습니다.", "WorkBuddy 積分明細日期無效"]
+  "WorkBuddy 积分明细日期无效": ["A WorkBuddy credit detail date is invalid.", "Une date de détail WorkBuddy est invalide.", "WorkBuddyのクレジット明細の日付が無効です。", "WorkBuddy 크레딧 상세 내역의 날짜가 올바르지 않습니다.", "WorkBuddy 積分明細日期無效"],
+  "查看全部 ↗": ["View all ↗", "Tout afficher ↗", "すべて表示 ↗", "모두 보기 ↗", "查看全部 ↗"],
+  "‹ 返回列表": ["‹ Back to list", "‹ Retour à la liste", "‹ 一覧に戻る", "‹ 목록으로", "‹ 返回列表"],
+  "动态消息": ["Update messages", "Messages de l’actualité", "動向のメッセージ", "소식 메시지", "動態訊息"],
+  "{0} 条消息": ["{0} messages", "{0} messages", "{0}件のメッセージ", "메시지 {0}개", "{0} 則訊息"],
+  "1 条消息": ["1 message", "1 message", "1件のメッセージ", "메시지 1개", "1 則訊息"],
+  "进展": ["Progress", "Suivi", "進捗", "진행 상황", "進展"],
+  "消息": ["Message", "Message", "メッセージ", "메시지", "訊息"],
+  "暂无消息正文。": ["No message text available.", "Aucun texte disponible.", "メッセージ本文はありません。", "메시지 본문이 없습니다.", "暫無訊息內文。"]
 }

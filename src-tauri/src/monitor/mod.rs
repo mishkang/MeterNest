@@ -831,7 +831,7 @@ pub fn resize_panel(core: &mut Core) {
     let height = if compact {
         core.monitor.compact_heights.get(&provider).copied().map(|h| h as f64).unwrap_or(default_height as f64)
     } else {
-        744.0
+        crate::windows::PANEL_HEIGHT
     };
     let fallback_area = macos::ScreenFrame { x: 0.0, y: 0.0, width: 1440.0, height: 900.0, frame_x: 0.0, frame_y: 0.0, frame_width: 1440.0, frame_height: 900.0 };
     let (mut anchor, area) = match screen_geometry(&core.app) {
@@ -867,16 +867,21 @@ pub fn on_escape_key(core: &mut Core) {
     }
 }
 
-pub fn fit_panel_height(core: &mut Core, height: f64) -> Result<bool, AppError> {
-    if !(240.0..=760.0).contains(&height) || height.is_nan() {
+pub fn fit_panel_height(core: &mut Core, provider: &str, height: f64) -> Result<bool, AppError> {
+    if !(240.0..=crate::windows::PANEL_HEIGHT).contains(&height) {
         return Err(AppError::message("额度窗口尺寸无效"));
     }
-    let provider = core.monitor.state.get("provider").and_then(Value::as_str).unwrap_or("codex").to_string();
+    if !matches!(provider, "codex" | "workbuddy")
+        || core.monitor.state["provider"].as_str() != Some(provider)
+    {
+        return Ok(false);
+    }
     let compact = if provider == "codex" { !core.monitor.show_reset_feed } else { !core.monitor.show_workbuddy_history };
+    let height = height.ceil();
     if compact {
-        let current = core.monitor.compact_heights.get(&provider).copied().unwrap_or(0);
-        if (current as f64 - height).abs() > 1.0 {
-            core.monitor.compact_heights.insert(provider, height.ceil() as i64);
+        let previous = core.monitor.compact_heights.get(provider).copied().unwrap_or(0);
+        if previous as f64 != height {
+            core.monitor.compact_heights.insert(provider.to_owned(), height as i64);
             resize_panel(core);
         }
     }
